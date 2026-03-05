@@ -9,8 +9,21 @@
 body{
  margin:0;
  padding:0;
- overflow:hidden;
  background:black;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ height:100vh;
+ overflow:hidden;
+}
+
+canvas{
+ background:black;
+ max-width:420px;
+ width:100%;
+ height:auto;
+ aspect-ratio: 2 / 3;
+ touch-action:none;
 }
 
 #status{
@@ -20,16 +33,6 @@ body{
  text-align:center;
  color:white;
  font-family:Arial;
- z-index:10;
-}
-
-canvas{
- background:black;
- display:block;
- margin:auto;
- width:100vw;
- height:100vh;
- touch-action:none;
 }
 
 </style>
