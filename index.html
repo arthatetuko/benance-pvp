@@ -2,13 +2,36 @@
 <html>
 <head>
 <title>Benance PvP Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <style>
+
+body{
+ margin:0;
+ padding:0;
+ overflow:hidden;
+ background:black;
+}
+
+#status{
+ position:absolute;
+ top:10px;
+ width:100%;
+ text-align:center;
+ color:white;
+ font-family:Arial;
+ z-index:10;
+}
+
 canvas{
  background:black;
  display:block;
  margin:auto;
+ width:100vw;
+ height:100vh;
+ touch-action:none;
 }
+
 </style>
 </head>
 
@@ -88,8 +111,15 @@ function createPipe(){
 
 let lastPipeTime = 0;
 
-document.addEventListener("click", ()=>{
+function flap(){
  velocity = -6;
+}
+
+document.addEventListener("click", flap);
+
+document.addEventListener("touchstart",(e)=>{
+ e.preventDefault();
+ flap();
 });
 
 function gameLoop(){
