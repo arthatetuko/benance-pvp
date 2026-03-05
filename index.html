@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Benance PvP Test</title>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+canvas{
+ background:black;
+ display:block;
+ margin:auto;
+}
+</style>
+</head>
+
+<body>
+
+<h2 id="status">Connecting...</h2>
+
+<canvas id="game" width="400" height="600"></canvas>
+
+<script>
+
+const socket = io();
+
+let seed;
+let gameStarted = false;
+let gameOver = false;
+let opponentDead = false;
+let result = "";
+let score = 0;
+let startTime = 0;
+
+socket.on("status", (msg)=>{
+ document.getElementById("status").innerText = msg;
+});
+
+socket.on("startGame", (data)=>{
+
+ seed = data.seed;
+ startTime = data.startTime;
+
+ document.getElementById("status").innerText = "Match Found!";
+});
+
+socket.on("opponentScore", (s)=>{
+ console.log("Opponent score:", s);
+});
+
+socket.on("opponentPosition", (data)=>{
+ opponentY = data.y;
+});
+
+socket.on("opponentDead", ()=>{
+
+ opponentDead = true;
+
+ if(!gameOver){
+   result = "YOU WIN";
+   gameOver = true;
+ }
+
+});
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let birdY = 200;
+let velocity = 0;
+let pipes = [];
+
+let opponentY = 200;
+
+function seededRandom(seed){
+ const x = Math.sin(seed++) * 10000;
+ return x - Math.floor(x);
+}
+
+function createPipe(){
+ const y = 100 + seededRandom(seed) * 300;
+
+ pipes.push({
+  x:400,
+  y:y
+ });
+
+ seed++;
+}
+
+let lastPipeTime = 0;
+
+document.addEventListener("click", ()=>{
+ velocity = -6;
+});
+
+function gameLoop(){
+
+if(gameOver){
+
+ ctx.fillStyle="white";
+ ctx.font="40px Arial";
+ ctx.textAlign="center";
+ ctx.fillText("GAME OVER",200,260);
+ ctx.fillText(result,200,320);
+
+}
+
+ const groundY = 580;
+ if(startTime === 0){
+   requestAnimationFrame(gameLoop);
+   return;
+ }
+
+ if(Date.now() < startTime){
+
+  ctx.clearRect(0,0,400,600);
+
+  let seconds = Math.ceil((startTime - Date.now()) / 1000);
+
+  ctx.fillStyle="white";
+  ctx.font="60px Arial";
+  ctx.textAlign="center";
+  ctx.fillText(seconds,200,300);
+
+  requestAnimationFrame(gameLoop);
+  return;
+ }
+
+ if(!gameStarted){
+   gameStarted = true;
+   document.getElementById("status").innerText = "GO!";
+ }
+
+ ctx.clearRect(0,0,400,600);
+
+ if(!gameOver){
+ velocity += 0.4;
+ birdY += velocity;
+}
+
+ if(birdY > groundY){
+
+ if(!gameOver){
+
+  gameOver = true;
+
+  if(!opponentDead){
+    result = "YOU LOSE";
+  }
+
+  socket.emit("playerDead");
+
+ }
+
+}
+
+ if(!gameOver){
+ socket.emit("playerPosition", {y: birdY});
+}
+
+ ctx.fillStyle="yellow";
+ ctx.fillRect(50,birdY,20,20);
+
+ ctx.globalAlpha = 0.4;
+ ctx.fillStyle="cyan";
+ ctx.fillRect(50, opponentY, 20, 20);
+ ctx.globalAlpha = 1;
+
+ const gameTime = Date.now() - startTime;
+
+if(gameStarted && gameTime - lastPipeTime > 2000){
+ createPipe();
+ lastPipeTime = gameTime;
+}
+
+pipes.forEach(pipe => {
+
+ pipe.x -= 2;
+
+ const gap = 150;
+
+ ctx.fillStyle="green";
+ ctx.fillRect(pipe.x,0,40,pipe.y);
+ ctx.fillRect(pipe.x,pipe.y+gap,40,600);
+
+ // collision horizontal
+ if(50 < pipe.x + 40 && 50 + 20 > pipe.x){
+
+   // collision atas atau bawah
+   if(birdY < pipe.y || birdY + 20 > pipe.y + gap){
+
+     if(!gameOver){
+
+       gameOver = true;
+
+       if(!opponentDead){
+         result = "YOU LOSE";
+       }
+
+       socket.emit("playerDead");
+
+     }
+
+   }
+
+ }
+
+ // score
+ if(pipe.x === 50){
+  score++;
+  socket.emit("score",score);
+ }
+
+});
+
+if(result !== ""){
+
+ ctx.fillStyle="white";
+ ctx.font="40px Arial";
+ ctx.textAlign="center";
+
+ ctx.fillText("GAME OVER",200,250);
+ ctx.fillText(result,200,320);
+
+}
+
+ requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
