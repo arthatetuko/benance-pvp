@@ -102,6 +102,18 @@ canvas{
 
 <button id="createBattle">Create Battle</button>
 <button id="joinBattle">Join Battle</button>
+const menuBox = document.getElementById("menuBox");
+
+document.getElementById("joinBattle").onclick = ()=>{
+
+ menuBox.style.display = "none";
+
+ document.getElementById("status").innerText = "Waiting opponent...";
+
+ socket.emit("joinBattle");
+
+};
+
 <button id="statistic">Statistic</button>
 
 </div>
