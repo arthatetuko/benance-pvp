@@ -102,18 +102,6 @@ canvas{
 
 <button id="createBattle">Create Battle</button>
 <button id="joinBattle">Join Battle</button>
-const menuBox = document.getElementById("menuBox");
-
-document.getElementById("joinBattle").onclick = ()=>{
-
- menuBox.style.display = "none";
-
- document.getElementById("status").innerText = "Waiting opponent...";
-
- socket.emit("joinBattle");
-
-};
-
 <button id="statistic">Statistic</button>
 
 </div>
@@ -167,30 +155,6 @@ socket.on("opponentDead", ()=>{
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-const menuBox = document.getElementById("menuBox");
-
-document.getElementById("createBattle").onclick = () => {
-
- menuBox.style.display = "none";
-
- document.getElementById("status").innerText = "Waiting opponent...";
-
-};
-
-document.getElementById("joinBattle").onclick = () => {
-
- menuBox.style.display = "none";
-
- document.getElementById("status").innerText = "Searching battle...";
-
-};
-
-document.getElementById("statistic").onclick = () => {
-
- alert("Statistic coming soon");
-
-};
-
 
 let birdY = 200;
 let velocity = 0;
