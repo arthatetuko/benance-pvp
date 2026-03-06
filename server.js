@@ -10,34 +10,33 @@ app.use(express.static(__dirname));
 
 let waitingPlayer = null;
 
-console.log("Player connected:", socket.id);
+io.on("connection", (socket) => {
 
- socket.on("joinBattle", ()=>{
+  console.log("Player connected:", socket.id);
 
-   if (!waitingPlayer){
+  if (!waitingPlayer) {
 
-     waitingPlayer = socket;
-     socket.emit("status","Waiting opponent...");
+    waitingPlayer = socket;
+    socket.emit("status", "Waiting opponent...");
 
-   } else {
+  } else {
 
-     const roomId = "room-" + Math.random().toString(36).substr(2,5);
+    const roomId = "room-" + Math.random().toString(36).substr(2,5);
 
-     const seed = Math.floor(Math.random() * 100000);
-     const startTime = Date.now() + 5000;
+    const seed = Math.floor(Math.random() * 100000);
+    const startTime = Date.now() + 10000;
 
-     socket.join(roomId);
-     waitingPlayer.join(roomId);
+    socket.join(roomId);
+    waitingPlayer.join(roomId);
 
-     socket.roomId = roomId;
-     waitingPlayer.roomId = roomId;
+    socket.emit("startGame", { seed, startTime });
+    waitingPlayer.emit("startGame", { seed, startTime });
 
-     socket.emit("startGame",{seed,startTime});
-     waitingPlayer.emit("startGame",{seed,startTime});
+    socket.roomId = roomId;
+    waitingPlayer.roomId = roomId;
 
-     waitingPlayer = null;
-
-   }
+    waitingPlayer = null;
+  }
 
   socket.on("score", (score) => {
 
