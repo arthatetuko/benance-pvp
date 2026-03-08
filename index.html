@@ -3,7 +3,7 @@
 
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <title>Benance PvP</title>
 
@@ -16,6 +16,14 @@ body{
  background:black;
  font-family:Arial;
  color:white;
+
+ touch-action:manipulation;
+}
+
+html,body{
+ width:100%;
+ height:100%;
+ overflow:hidden;
 }
 
 #wallet{
@@ -30,16 +38,22 @@ body{
  left:50%;
  transform:translate(-50%,-50%);
  text-align:center;
- width:320px;
- max-height:90vh;
- overflow:hidden;
+
+ width:90%;
+ max-width:340px;
+
+ max-height:85vh;
+ overflow-y:auto;
+
+ padding-bottom:20px;
 }
 
 #battleList{
  margin-top:20px;
- max-height:60vh;
+ max-height:55vh;
  overflow-y:auto;
- padding-bottom:40px;
+
+ -webkit-overflow-scrolling:touch;
 }
 
 .battleCard{
@@ -60,16 +74,22 @@ body{
  margin-top:8px;
  margin-right:6px;
 
- padding:6px 10px;
+ padding:10px 14px;
+ font-size:14px;
 
  border:none;
- border-radius:4px;
+ border-radius:6px;
 
  background:#2ecc71;
  color:white;
 
  cursor:pointer;
 
+}
+
+button{
+ padding:12px 16px;
+ font-size:16px;
 }
 
 .battleCard button:hover{
@@ -80,7 +100,12 @@ canvas{
  display:block;
  margin:auto;
  background:black;
- touch-action: manipulation;
+
+ width:100vw;
+ height:100vh;
+
+ max-width:400px;
+ max-height:600px;
 }
 
 </style>
@@ -166,10 +191,9 @@ z-index:9999;
 ">
 
 <h2>YOU WIN</h2>
+<p>Claim your reward to return to lobby</p>
 
-<button onclick="backToMenu()">OK</button>
-
-<button onclick="getPrize()">GET PRIZE</button>
+<button onclick="getPrize()">CLAIM PRIZE</button>
 
 </div>
 
@@ -191,7 +215,7 @@ z-index:9999;
 
 </div>
 
-<canvas id="game"></canvas>   
+<canvas id="game"></canvas>
 
 <script>
 
@@ -203,6 +227,20 @@ const skins = [
  {name:"Rocket", file:"rocket"}
 ];
 
+// background
+const bgImage = new Image();
+bgImage.src = "skins/background.png";
+
+let bgX = 0;
+
+
+// pipe images
+const pipeBody = new Image();
+pipeBody.src = "skins/pipe_body.png";
+
+const pipeHead = new Image();
+pipeHead.src = "skins/pipe_head.png";
+
 const socket=io();
 
 let gameActive = false;
@@ -212,7 +250,6 @@ let startTime=0;
 let countdownInterval = null;
 let statusText = "";
 let isSpectator = false;
-let birdSize = 40;
 
 let birdY=200;
 let velocity=0;
@@ -220,16 +257,26 @@ let pipes=[];
 let walletAddress = localStorage.getItem("wallet");
 let playerSkin = localStorage.getItem("skin") || "changpeng";
 
+
+let birdFrame = 0;
+let flapTimer = 0;
+
+let birdFrames = [
+ new Image(),
+ new Image()
+];
+
 let opponents = {};
 let opponentPositions = {};
+
+birdFrames[0].src = "skins/" + playerSkin + "_1.png";
+birdFrames[1].src = "skins/" + playerSkin + "_2.png";
 
 socket.on("opponentSkin",(data)=>{
 
  const img = new Image();
 
  img.src = "skins/" + data.skin + "_1.png";
-img.frame2 = new Image();
-img.frame2.src = "skins/" + data.skin + "_2.png";
 
  opponents[data.id] = img;
 
@@ -269,18 +316,6 @@ function renderSkinList(){
 
 }
 
-let birdFrame = 0;
-let flapTimer = 0;
-
-let birdFrames = [
- new Image(),
- new Image()
-];
-
-birdFrames[0].src = "skins/" + playerSkin + "_1.png";
-birdFrames[1].src = "skins/" + playerSkin + "_2.png";
-
-
 function selectSkin(file){
 
  playerSkin = file;
@@ -309,25 +344,38 @@ function setMinBattleTime(){
 
 setMinBattleTime();
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
+const baseWidth = 360;
+const baseHeight = 640;
 
-function resizeGame(){
+function resizeCanvas(){
 
- const maxWidth = Math.min(window.innerWidth, 500);
- const height = maxWidth * 1.5;
+ const screenRatio = window.innerWidth / window.innerHeight;
+ const gameRatio = baseWidth / baseHeight;
 
- canvas.width = maxWidth;
- canvas.height = height;
+ let renderWidth;
+ let renderHeight;
 
- birdSize = canvas.width * 0.1;
+ if(screenRatio > gameRatio){
+  renderHeight = window.innerHeight;
+  renderWidth = renderHeight * gameRatio;
+}else{
+  renderWidth = window.innerWidth;
+  renderHeight = renderWidth / gameRatio;
+}
+
+ canvas.style.width = renderWidth + "px";
+ canvas.style.height = renderHeight + "px";
+
+ canvas.width = baseWidth;
+ canvas.height = baseHeight;
 
 }
 
-resizeGame();
-
-window.addEventListener("resize", resizeGame);
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 socket.on("battleList",(battles)=>{
 
@@ -637,10 +685,10 @@ function createPipe(){
  const y = minY + seededRandom() * (maxY - minY);
 
  pipes.push({
- x:canvas.width + canvas.width * 0.1,
- y:y,
- gap:gap
-});
+  x:canvas.width + 50,
+  y:y,
+  gap:gap
+ });
 
 }
 
@@ -652,20 +700,31 @@ setInterval(()=>{
 
 },2000);
 
-function flap(){
+document.addEventListener("click",()=>{
 
- if(!gameActive) return;
+ velocity=-6;
 
- velocity = -6;
+});
 
-}
-
-document.addEventListener("click", flap);
-document.addEventListener("touchstart", flap);
+document.addEventListener("touchstart",()=>{
+ velocity=-6;
+});
 
 function gameLoop(){
 
- ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+// background scroll
+// background scroll
+bgX -= 0.4;
+
+if(bgX <= -bgImage.width){
+ bgX = 0;
+}
+
+ctx.drawImage(bgImage, bgX, 0);
+ctx.drawImage(bgImage, bgX + bgImage.width, 0);
+
 
  // tampilkan text countdown walaupun game belum aktif
  if(!gameActive){
@@ -691,19 +750,16 @@ function gameLoop(){
  // mati jika menyentuh lantai
 if(!isSpectator){
 
- if(birdY + birdSize >= canvas.height){
+ if(birdY + 20 >= canvas.height){
 
- if(gameActive){
+  if(gameActive){
 
-  gameActive = false;
-
-  if(!isSpectator){
+   gameActive = false;
    socket.emit("playerDead",room);
+
   }
 
  }
-
-}
 
 }
 
@@ -723,13 +779,7 @@ if(flapTimer > 6){
 }
 
 if(!isSpectator){
- ctx.drawImage(
- birdFrames[birdFrame],
- canvas.width * 0.15,
- birdY,
- birdSize,
- birdSize
-);
+ ctx.drawImage(birdFrames[birdFrame],50,birdY,40,40);
 }
 
 ctx.globalAlpha = 1;
@@ -741,37 +791,41 @@ ctx.globalAlpha = 1;
  if(img.complete && img.naturalWidth !== 0){
 
   ctx.globalAlpha = 0.4;
-  ctx.drawImage(
- img,
- canvas.width * 0.15,
- y,
- birdSize,
- birdSize
-);
+  ctx.drawImage(img,50,y,40,40);
   ctx.globalAlpha = 1;
 
  }
 
 });
 
- const pipeWidth = canvas.width * 0.08;
-
  pipes.forEach(pipe=>{
 
  pipe.x -= 2;
 
- ctx.fillStyle="green";
+ // TOP PIPE
+let bodyHeight = pipe.y - 30;
 
- ctx.fillRect(pipe.x,0,pipeWidth,pipe.y);
-ctx.fillRect(pipe.x,pipe.y + pipe.gap,pipeWidth,canvas.height);
+for(let y=0; y<bodyHeight; y+=32){
+ ctx.drawImage(pipeBody, pipe.x, y, 40, 32);
+}
+
+ctx.drawImage(pipeHead, pipe.x-5, pipe.y-30, 50, 30);
+
+
+// BOTTOM PIPE
+let bottomStart = pipe.y + pipe.gap;
+
+for(let y=bottomStart+30; y<canvas.height; y+=32){
+ ctx.drawImage(pipeBody, pipe.x, y, 40, 32);
+}
+
+ctx.drawImage(pipeHead, pipe.x-5, bottomStart, 50, 30);
 
  if(!isSpectator){
 
-  const birdX = canvas.width * 0.15;
+  if(50 < pipe.x + 40 && 70 > pipe.x){
 
-if(birdX < pipe.x + pipeWidth && birdX + birdSize > pipe.x){
-
-   if(birdY < pipe.y || birdY + birdSize > pipe.y + pipe.gap){
+   if(birdY < pipe.y || birdY + 20 > pipe.y + pipe.gap){
 
     if(gameActive){
 
@@ -843,6 +897,8 @@ function backToMenu(){
  birdY = 200;
  velocity = 0;
 
+ opponentY = 200;
+
  opponents = {};
  opponentPositions = {};
 
@@ -856,10 +912,6 @@ function backToMenu(){
  document.getElementById("spectatorGameOver").style.display="none";
 
  document.getElementById("menu").style.display = "block";
-
- setTimeout(()=>{
- location.reload();
-},200);
 
 }
 
