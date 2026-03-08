@@ -748,7 +748,7 @@ ctx.drawImage(bgImage, bgX + bgImage.width, 0);
  // mati jika menyentuh lantai
 if(!isSpectator){
 
- if(birdY + 20 >= canvas.height){
+ if(birdY + 30 >= canvas.height){
 
   if(gameActive){
 
@@ -777,7 +777,7 @@ if(flapTimer > 6){
 }
 
 if(!isSpectator){
- ctx.drawImage(birdFrames[birdFrame],50,birdY,40,40);
+ ctx.drawImage(birdFrames[birdFrame],50,birdY,50,50);
 }
 
 ctx.globalAlpha = 1;
@@ -823,7 +823,7 @@ ctx.drawImage(pipeHead, pipe.x-5, bottomStart, 50, 30);
 
   if(50 < pipe.x + 40 && 70 > pipe.x){
 
-   if(birdY < pipe.y || birdY + 20 > pipe.y + pipe.gap){
+   if(birdY < pipe.y || birdY + 30 > pipe.y + pipe.gap){
 
     if(gameActive){
 
