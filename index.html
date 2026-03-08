@@ -696,13 +696,15 @@ ctx.globalAlpha = 1;
 
  Object.entries(opponents).forEach(([id,img])=>{
 
- const y = opponentPositions[id] ?? 200;
+ const y = opponentPositions[id] !== undefined ? opponentPositions[id] : 200;
 
- ctx.globalAlpha = 0.4;
  if(img.complete && img.naturalWidth !== 0){
- ctx.drawImage(img,50,y,40,40);
-}
- ctx.globalAlpha = 1;
+
+  ctx.globalAlpha = 0.4;
+  ctx.drawImage(img,50,y,40,40);
+  ctx.globalAlpha = 1;
+
+ }
 
 });
 
@@ -784,16 +786,30 @@ function backToMenu(){
 
  gameActive = false;
  room = null;
+
  pipes = [];
+
  birdY = 200;
  velocity = 0;
+
  opponentY = 200;
+
+ opponents = {};
+ opponentPositions = {};
+
+ statusText = "";
+
+ seed = 0;
 
  isSpectator = false;
 
+ document.getElementById("winPopup").style.display="none";
  document.getElementById("spectatorGameOver").style.display="none";
 
  document.getElementById("menu").style.display = "block";
+
+ socket.off("opponentPosition");
+ socket.off("opponentSkin");
 
 }
 
