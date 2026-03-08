@@ -658,17 +658,20 @@ function gameLoop(){
   return;
  }
 
+ if(!isSpectator){
  velocity += 0.4;
  birdY += velocity;
+}
  // mati jika menyentuh lantai
-if(birdY + 20 >= canvas.height){
+if(!isSpectator){
 
- if(gameActive){
+ if(birdY + 20 >= canvas.height){
 
-  gameActive = false;
+  if(gameActive){
 
-  if(!isSpectator){
+   gameActive = false;
    socket.emit("playerDead",room);
+
   }
 
  }
@@ -690,7 +693,9 @@ if(flapTimer > 6){
  flapTimer = 0;
 }
 
-ctx.drawImage(birdFrames[birdFrame],50,birdY,40,40);
+if(!isSpectator){
+ ctx.drawImage(birdFrames[birdFrame],50,birdY,40,40);
+}
 
 ctx.globalAlpha = 1;
 
