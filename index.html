@@ -195,11 +195,11 @@ z-index:9999;
 <script>
 
 const skins = [
- {name:"Changpeng", file:"changpeng.png"},
- {name:"DO", file:"do.png"},
- {name:"Garuda", file:"garuda.png"},
- {name:"LUNC169", file:"lunc169.png"},
- {name:"Rocket", file:"rocket.png"}
+ {name:"Changpeng", file:"changpeng"},
+ {name:"DO", file:"do"},
+ {name:"Garuda", file:"garuda"},
+ {name:"LUNC169", file:"lunc169"},
+ {name:"Rocket", file:"rocket"}
 ];
 
 const socket=io();
@@ -215,19 +215,29 @@ let isSpectator = false;
 let birdY=200;
 let velocity=0;
 let pipes=[];
-let opponentY=200;
 let walletAddress = localStorage.getItem("wallet");
-let playerSkin = localStorage.getItem("skin") || "changpeng.png";
+let playerSkin = localStorage.getItem("skin") || "changpeng";
 
-let birdImage = new Image();
+
+let birdFrame = 0;
+let flapTimer = 0;
+
+let birdFrames = [
+ new Image(),
+ new Image()
+];
+
 let opponents = {};
 let opponentPositions = {};
-birdImage.src = "skins/" + playerSkin;
+
+birdFrames[0].src = "skins/" + playerSkin + "_1.png";
+birdFrames[1].src = "skins/" + playerSkin + "_2.png";
 
 socket.on("opponentSkin",(data)=>{
 
  const img = new Image();
- img.src = "skins/" + data.skin;
+
+ img.src = "skins/" + data.skin + "_1.png";
 
  opponents[data.id] = img;
 
@@ -256,7 +266,7 @@ function renderSkinList(){
   div.style.marginBottom="15px";
 
   div.innerHTML = `
-   <img src="skins/${s.file}" width="60"><br>
+   <img src="skins/${s.file}_1.png" width="60"><br>
    ${s.name}<br>
    <button onclick="selectSkin('${s.file}')">Select</button>
   `;
@@ -273,7 +283,8 @@ function selectSkin(file){
 
  localStorage.setItem("skin",file);
 
- birdImage.src = "skins/" + file;
+ birdFrames[0].src = "skins/" + file + "_1.png";
+ birdFrames[1].src = "skins/" + file + "_2.png";
 
  alert("Skin selected");
 
@@ -672,7 +683,14 @@ if(birdY + 20 >= canvas.height){
  ctx.globalAlpha = 0.4;
 }
 
-ctx.drawImage(birdImage,50,birdY,40,40);
+flapTimer++;
+
+if(flapTimer > 6){
+ birdFrame = (birdFrame + 1) % 2;
+ flapTimer = 0;
+}
+
+ctx.drawImage(birdFrames[birdFrame],50,birdY,40,40);
 
 ctx.globalAlpha = 1;
 
@@ -681,7 +699,9 @@ ctx.globalAlpha = 1;
  const y = opponentPositions[id] ?? 200;
 
  ctx.globalAlpha = 0.4;
+ if(img.complete && img.naturalWidth !== 0){
  ctx.drawImage(img,50,y,40,40);
+}
  ctx.globalAlpha = 1;
 
 });
