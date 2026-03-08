@@ -211,7 +211,7 @@ socket.on("playerPosition",(data)=>{
 
   socket.join(room);
 
-  socket.skin = data.skin || "changpeng.png";
+  socket.skin = data.skin || "changpeng";
 
 socket.to(room).emit("opponentSkin",{
  id: socket.id,
@@ -267,7 +267,7 @@ socket.to(room + "-peep").emit("opponentSkin",{
 
   socket.join(room);
 
-  socket.skin = data.skin || "changpeng.png";
+  socket.skin = data.skin || "changpeng";
 
 socket.to(room).emit("opponentSkin",{
  id: socket.id,

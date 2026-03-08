@@ -715,12 +715,14 @@ ctx.globalAlpha = 1;
 
  pipes.forEach(pipe=>{
 
-  pipe.x -= 2;
+ pipe.x -= 2;
 
-  ctx.fillStyle="green";
+ ctx.fillStyle="green";
 
-  ctx.fillRect(pipe.x,0,40,pipe.y);
-  ctx.fillRect(pipe.x,pipe.y + pipe.gap,40,600);
+ ctx.fillRect(pipe.x,0,40,pipe.y);
+ ctx.fillRect(pipe.x,pipe.y + pipe.gap,40,600);
+
+ if(!isSpectator){
 
   if(50 < pipe.x + 40 && 70 > pipe.x){
 
@@ -728,19 +730,18 @@ ctx.globalAlpha = 1;
 
     if(gameActive){
 
- gameActive = false;
+     gameActive = false;
+     socket.emit("playerDead",room);
 
- if(!isSpectator){
- socket.emit("playerDead",room);
-}
-
-}
+    }
 
    }
 
   }
 
- });
+ }
+
+});
 
  if(statusText !== ""){
 
