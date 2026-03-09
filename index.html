@@ -293,7 +293,10 @@ let createStep = 0;
 let createBattleTime = null;
 let createBet = null;
 
-let birdY=200;
+const startPlayerY = 170;
+const startOpponentY = 220;
+
+let birdY = startPlayerY;
 let velocity=0;
 let pipes=[];
 let walletAddress = localStorage.getItem("wallet");
@@ -861,11 +864,9 @@ ctx.drawImage(bgImage, bgX + bgImage.width, 0);
 
   }
 
-  requestAnimationFrame(gameLoop);
-  return;
  }
 
- if(!isSpectator){
+ if(gameActive && !isSpectator){
  velocity += 0.4;
  birdY += velocity;
 }
@@ -886,7 +887,9 @@ if(!isSpectator){
 }
 
  if(!isSpectator){
+ if(gameActive){
  socket.emit("playerPosition",{y:birdY,room:room});
+}
 }
 
  if(isSpectator){
@@ -908,7 +911,7 @@ ctx.globalAlpha = 1;
 
  Object.entries(opponents).forEach(([id,img])=>{
 
- const y = opponentPositions[id] !== undefined ? opponentPositions[id] : 200;
+ const y = opponentPositions[id] !== undefined ? opponentPositions[id] : startOpponentY;
 
  if(img.complete && img.naturalWidth !== 0){
 
@@ -979,6 +982,8 @@ ctx.drawImage(pipeHead, pipe.x-5, bottomStart, 50, 30);
 }
 
 function startCountdown(){
+ 
+  birdY = startPlayerY;
 
  clearInterval(countdownInterval);
 
@@ -1016,10 +1021,10 @@ function backToMenu(){
 
  pipes = [];
 
- birdY = 200;
+ birdY = startPlayerY;
  velocity = 0;
 
- opponentY = 200;
+ opponentY = startOpponentY;
 
  opponents = {};
  opponentPositions = {};
