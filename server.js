@@ -273,6 +273,12 @@ socket.to(room + "-peep").emit("opponentSkin",{
   skin: socket.skin
  });
 
+ // FIX BUG spectator
+socket.to(room + "-peep").emit("opponentSkin",{
+ id: socket.id,
+ skin: socket.skin
+});
+
  // kirim skin creator ke challenger
  const clients = io.sockets.adapter.rooms.get(room);
 
