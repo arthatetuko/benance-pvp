@@ -253,39 +253,51 @@ socket.to(room + "-peep").emit("opponentSkin",{
  } 
  else {
 
-  // jika challenger sudah ada
-  if(battle.challenger){
-   socket.emit("joinDenied","Room already full");
-   return;
-  }
+ if(battle.challenger){
+  socket.emit("joinDenied","Room already full");
+  return;
+ }
 
-  // validasi bet
-  if(Number(data.bet) !== Number(battle.bet)){
-   socket.emit("joinDenied","Bet amount must match creator bet");
-   return;
-  }
+ if(Number(data.bet) !== Number(battle.bet)){
+  socket.emit("joinDenied","Bet amount must match creator bet");
+  return;
+ }
 
-  socket.join(room);
+ socket.join(room);
 
-  socket.skin = data.skin || "changpeng";
+ socket.skin = data.skin || "changpeng";
 
-socket.to(room).emit("opponentSkin",{
- id: socket.id,
- skin: socket.skin
-});
+ // kirim skin challenger ke creator
+ socket.to(room).emit("opponentSkin",{
+  id: socket.id,
+  skin: socket.skin
+ });
 
-// kirim juga ke spectator
-socket.to(room + "-peep").emit("opponentSkin",{
- id: socket.id,
- skin: socket.skin
-});
+ // kirim skin creator ke challenger
+ const clients = io.sockets.adapter.rooms.get(room);
 
-  battle.challenger = data.wallet;
-  battle.pot += Number(data.bet);
-  // challenger sudah masuk, tunggu creator
-  battle.status = "PLAYER READY";
+ if(clients){
+
+  clients.forEach(id=>{
+
+   const s = io.sockets.sockets.get(id);
+
+   if(s && s !== socket && s.skin){
+    socket.emit("opponentSkin",{
+     id: s.id,
+     skin: s.skin
+    });
+   }
+
+  });
 
  }
+
+ battle.challenger = data.wallet;
+ battle.pot += Number(data.bet);
+ battle.status = "PLAYER READY";
+
+}
 
  updatePlayers();
 
