@@ -198,6 +198,42 @@ z-index:9999;
 
 </div>
 
+<div id="createOverlay" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:9998;
+"></div>
+
+<div id="createPopup" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:25px;
+border-radius:12px;
+width:300px;
+text-align:center;
+z-index:9999;
+">
+
+<h3 id="createTitle">Set Battle Time</h3>
+
+<div id="createContent"></div>
+
+<br>
+
+<button onclick="createNext()">Next</button>
+<button onclick="closeCreateBattle()">Close</button>
+
+</div>
+
 <div id="spectatorGameOver" style="
  display:none;
  position:absolute;
@@ -252,6 +288,9 @@ let startTime=0;
 let countdownInterval = null;
 let statusText = "";
 let isSpectator = false;
+let createStep = 0;
+let createBattleTime = null;
+let createBet = null;
 
 let birdY=200;
 let velocity=0;
@@ -457,46 +496,114 @@ if(b.creator !== walletAddress && status !== "CLOSED"){
 
 });
 
-document.getElementById("createBattle").onclick=()=>{
+function openCreateBattle(){
 
- const battleTime = document.getElementById("battleTime").value;
+ createStep = 1;
 
- if(!battleTime){
-  alert("Failed, date not set");
-  return;
- }
+ document.getElementById("createOverlay").style.display="block";
+ document.getElementById("createPopup").style.display="block";
 
- const startTime = new Date(battleTime).getTime();
+ renderCreateStep();
 
- const now = Date.now();
- const minTime = now + 10000; // 10 detik
-
- if(startTime < now){
-  alert("Failed, date must be in the future");
-  return;
- }
-
- if(startTime < minTime){
-  alert("Failed, date must be +5 minute from current time");
-  return;
- }
-
- // setelah tanggal valid baru minta bet
- const bet = prompt("Enter bet LUNC");
-
-if(!bet) return;
-
-if(!confirm("Deposit "+formatLunc(bet)+" LUNC to create this battle?")){
- return;
 }
 
-socket.emit("createBattle",{
- bet:Number(bet),
- startTime:startTime,
- creator:walletAddress
-});
+function closeCreateBattle(){
 
+ document.getElementById("createOverlay").style.display="none";
+ document.getElementById("createPopup").style.display="none";
+
+}
+
+function renderCreateStep(){
+
+ const title = document.getElementById("createTitle");
+ const content = document.getElementById("createContent");
+
+ if(createStep === 1){
+
+  title.innerText = "Set Battle Time";
+
+  content.innerHTML = `
+   <input type="datetime-local" id="popupBattleTime">
+  `;
+
+ }
+
+ if(createStep === 2){
+
+  title.innerText = "Enter Bet";
+
+  content.innerHTML = `
+   <input type="number" id="popupBet" placeholder="LUNC amount">
+  `;
+
+ }
+
+ if(createStep === 3){
+
+  title.innerText = "Confirm Deposit";
+
+  content.innerHTML = `
+   Deposit ${formatLunc(createBet)} LUNC to create this battle?
+  `;
+
+ }
+
+}
+ 
+document.getElementById("createBattle").onclick=()=>{
+ openCreateBattle();
 };
+
+function createNext(){
+
+ if(createStep === 1){
+
+  const time = document.getElementById("popupBattleTime").value;
+
+  if(!time){
+   alert("Date not set");
+   return;
+  }
+
+  createBattleTime = new Date(time).getTime();
+
+  createStep = 2;
+  renderCreateStep();
+  return;
+
+ }
+
+ if(createStep === 2){
+
+  const bet = document.getElementById("popupBet").value;
+
+  if(!bet){
+   alert("Enter bet");
+   return;
+  }
+
+  createBet = Number(bet);
+
+  createStep = 3;
+  renderCreateStep();
+  return;
+
+ }
+
+ if(createStep === 3){
+
+  socket.emit("createBattle",{
+   bet:createBet,
+   startTime:createBattleTime,
+   creator:walletAddress
+  });
+
+  closeCreateBattle();
+
+ }
+
+} 
 
 function openSkinMenu(){
 
