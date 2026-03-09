@@ -233,9 +233,8 @@ z-index:9999;
 
 <br>
 
-<button onclick="createNext()">Next</button>
 <button onclick="closeCreateBattle()">Close</button>
-
+<button onclick="createNext()">Next</button>
 </div>
 
 <div id="spectatorGameOver" style="
@@ -525,11 +524,17 @@ function renderCreateStep(){
 
  if(createStep === 1){
 
-  title.innerText = "Set Battle Time";
+ title.innerText = "Set Battle Time";
 
-  content.innerHTML = `
-   <input type="datetime-local" id="popupBattleTime">
-  `;
+ const now = new Date();
+ now.setSeconds(0);
+ now.setMilliseconds(0);
+
+ const iso = now.toISOString().slice(0,16);
+
+ content.innerHTML = `
+  <input type="datetime-local" id="popupBattleTime" min="${iso}">
+ `;
 
  }
 
