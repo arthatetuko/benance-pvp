@@ -149,8 +149,6 @@ z-index:9999;
 
 <div id="skinList"></div>
 
-<button onclick="closeSkinMenu()">Close</button>
-
 </div>
 
 <div id="wallet">
@@ -344,19 +342,23 @@ function renderSkinList(){
 
  skins.forEach(s=>{
 
-  const div=document.createElement("div");
+ const div = document.createElement("div");
 
-  div.style.marginBottom="15px";
+ div.style.marginBottom = "15px";
+ div.style.cursor = "pointer";
 
-  div.innerHTML = `
-   <img src="skins/${s.file}_1.png" width="60"><br>
-   ${s.name}<br>
-   <button onclick="selectSkin('${s.file}')">Select</button>
-  `;
+ div.innerHTML = `
+  <img src="skins/${s.file}_1.png" width="60"><br>
+  ${s.name}
+ `;
 
-  list.appendChild(div);
+ div.onclick = ()=>{
+  selectSkin(s.file);
+ };
 
- });
+ list.appendChild(div);
+
+});
 
 }
 
@@ -370,6 +372,8 @@ function selectSkin(file){
  birdFrames[1].src = "skins/" + file + "_2.png";
 
  alert("Skin selected");
+
+ closeSkinMenu();
 
 }
 
@@ -629,6 +633,10 @@ function closeSkinMenu(){
  document.getElementById("skinOverlay").style.display = "none";
 
 }
+
+document.getElementById("skinOverlay").onclick = ()=>{
+ closeSkinMenu();
+};
 
 function startLobbyTimer(id,startTime){
 
@@ -905,7 +913,7 @@ ctx.globalAlpha = 1;
  if(img.complete && img.naturalWidth !== 0){
 
   ctx.globalAlpha = 0.4;
-  ctx.drawImage(img,50,y,40,40);
+  ctx.drawImage(img,50,y,50,50);
   ctx.globalAlpha = 1;
 
  }
