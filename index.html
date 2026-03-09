@@ -196,7 +196,7 @@ z-index:9999;
 <h2>YOU WIN</h2>
 <p>Claim your reward to return to lobby</p>
 
-<button onclick="getPrize()">CLAIM PRIZE</button>
+<button onclick="getPrize(); location.reload();">CLAIM PRIZE</button>
 
 </div>
 
@@ -250,7 +250,7 @@ z-index:9999;
 
 <h2>GAME OVER</h2>
 
-<button onclick="backToMenu()">Back to Menu</button>
+<button onclick="location.reload()">Back</button>
 
 </div>
 
@@ -1053,6 +1053,7 @@ function backToMenu(){
  document.getElementById("spectatorGameOver").style.display="none";
 
  document.getElementById("menu").style.display = "block";
+ 
 
 }
 
