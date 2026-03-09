@@ -254,6 +254,27 @@ z-index:9999;
 
 </div>
 
+<div id="battleCanceledPopup" style="
+ display:none;
+ position:absolute;
+ top:50%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ background:#222;
+ padding:30px;
+ border-radius:10px;
+ text-align:center;
+ z-index:1000;
+">
+
+ <h2>Battle has been canceled</h2>
+
+ <br>
+
+ <button onclick="location.reload()">Back</button>
+
+</div>
+
 <canvas id="game"></canvas>
 
 <script>
@@ -775,6 +796,12 @@ socket.on("opponentDead",()=>{
 
 });
 
+socket.on("battleCanceled",()=>{
+
+ document.getElementById("battleCanceledPopup").style.display="block";
+
+});
+
 function getPrize(){
 
  socket.emit("claimPrize",{
@@ -1051,6 +1078,7 @@ function backToMenu(){
 
  document.getElementById("winPopup").style.display="none";
  document.getElementById("spectatorGameOver").style.display="none";
+ document.getElementById("battleCanceledPopup").style.display="none";
 
  document.getElementById("menu").style.display = "block";
  

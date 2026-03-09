@@ -140,6 +140,8 @@ socket.on("cancelBattle",(data)=>{
 
  const room = "battle-" + battle.id;
 
+ const peepRoom = room + "-peep";
+
  const players = io.sockets.adapter.rooms.get(room)?.size || 0;
 
  // jika sudah ada challenger
@@ -150,6 +152,8 @@ socket.on("cancelBattle",(data)=>{
   return;
 
  }
+ 
+ io.to(peepRoom).emit("battleCanceled");
 
  battles.splice(index,1);
 
