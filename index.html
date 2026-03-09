@@ -292,6 +292,7 @@ let isSpectator = false;
 let createStep = 0;
 let createBattleTime = null;
 let createBet = null;
+let isDying = false;
 
 const startPlayerY = 170;
 const startOpponentY = 220;
@@ -866,10 +867,19 @@ ctx.drawImage(bgImage, bgX + bgImage.width, 0);
 
  }
 
- if(gameActive && !isSpectator){
- velocity += 0.4;
- birdY += velocity;
+ if(!isSpectator){
+
+ if(isDying){
+  velocity += 0.6;
+  birdY += velocity;
+ }
+ else if(gameActive){
+  velocity += 0.4;
+  birdY += velocity;
+ }
+
 }
+
  // mati jika menyentuh lantai
 if(!isSpectator){
 
@@ -952,14 +962,17 @@ ctx.drawImage(pipeHead, pipe.x-5, bottomStart, 50, 30);
 
    if(birdY < pipe.y || birdY + 30 > pipe.y + pipe.gap){
 
-    if(gameActive){
+ if(!isDying){
+  isDying = true;
+  velocity = 5;
+ }
 
-     gameActive = false;
-     socket.emit("playerDead",room);
+ if(gameActive){
+  gameActive = false;
+  socket.emit("playerDead",room);
+ }
 
-    }
-
-   }
+}
 
   }
 
@@ -1034,6 +1047,7 @@ function backToMenu(){
  seed = 0;
 
  isSpectator = false;
+ isDying = false;
 
  document.getElementById("winPopup").style.display="none";
  document.getElementById("spectatorGameOver").style.display="none";
