@@ -1,12 +1,21 @@
+require("dotenv").config()
+
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
+const { createClient } = require('@supabase/supabase-js')
+
+const supabase = createClient(
+ process.env.SUPABASE_URL,
+ process.env.SUPABASE_SERVICE_KEY
+)
+
 const axios = require("axios");
 
-const TELEGRAM_TOKEN = "8668823419:AAHxEj2klU5Uto42ec5IowPbeoubz4UjnmQ";
-const TELEGRAM_CHAT_ID = "-1002724802750";
-const TELEGRAM_TOPIC_ID = 2554;
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID
+const TELEGRAM_TOPIC_ID = process.env.TELEGRAM_TOPIC_ID
 
 async function sendTelegram(message){
 
@@ -111,8 +120,16 @@ setInterval(()=>{
 
 io.on("connection",(socket)=>{
 
-socket.on("registerWallet",(wallet)=>{
+socket.on("registerWallet", async (wallet)=>{
+
  socket.wallet = wallet;
+
+ await supabase
+ .from("players")
+ .upsert({
+  wallet: wallet
+ });
+
 });
 
  console.log("Player connected:",socket.id);
@@ -465,7 +482,7 @@ socket.on("claimPrize",(data)=>{
 
 });
 
- socket.on("playerDead",(room)=>{
+ socket.on("playerDead", async (room)=>{
 
  const battle = battles.find(b => b.room === room);
 
@@ -484,6 +501,25 @@ socket.on("claimPrize",(data)=>{
 
   const loser = socket.wallet;
 const winner = loser === battle.creator ? battle.challenger : battle.creator;
+
+await supabase
+ .from("battles")
+ .insert({
+  creator_wallet: battle.creator,
+  challenger_wallet: battle.challenger,
+  winner_wallet: winner,
+  bet: battle.bet,
+  pot: battle.pot,
+  start_time: new Date(battle.startTime),
+  end_time: new Date()
+ });
+
+ await supabase.rpc("update_player_stats",{
+ creator_wallet: battle.creator,
+ challenger_wallet: battle.challenger,
+ winner_wallet: winner,
+ volume: battle.pot
+});
 
   sendTelegram(
 `🏆 BENANCE PvP WINNER
@@ -506,6 +542,25 @@ const winner = loser === battle.creator ? battle.challenger : battle.creator;
 
  const loser = socket.wallet;
 const winner = loser === battle.creator ? battle.challenger : battle.creator;
+
+await supabase
+.from("battles")
+.insert({
+ creator_wallet: battle.creator,
+ challenger_wallet: battle.challenger,
+ winner_wallet: winner,
+ bet: battle.bet,
+ pot: battle.pot,
+ start_time: new Date(battle.startTime),
+ end_time: new Date()
+});
+
+await supabase.rpc("update_player_stats",{
+ creator_wallet: battle.creator,
+ challenger_wallet: battle.challenger,
+ winner_wallet: winner,
+ volume: battle.pot
+});
 
   sendTelegram(
 `🏆 BENANCE PvP WINNER
@@ -562,6 +617,67 @@ if(socket.rooms.has(peepRoom)){
 });
 
 const PORT = process.env.PORT || 3000;
+
+app.get("/stats", async (req,res)=>{
+
+ const { data: battles } = await supabase
+ .from("battles")
+ .select("pot");
+
+ const { data: players } = await supabase
+ .from("players")
+ .select("wallet");
+
+ let volume = 0;
+
+ battles.forEach(b=>{
+  volume += Number(b.pot);
+ });
+
+ res.json({
+  totalBattles: battles.length,
+  totalVolume: volume,
+  totalPlayers: players.length
+ });
+
+});
+
+app.get("/leaderboard/winners", async (req,res)=>{
+
+ const { data } = await supabase
+ .from("players")
+ .select("*")
+ .order("total_wins",{ascending:false})
+ .limit(10);
+
+ res.json(data);
+
+});
+
+app.get("/leaderboard/volume", async (req,res)=>{
+
+ const { data } = await supabase
+ .from("players")
+ .select("*")
+ .order("total_volume",{ascending:false})
+ .limit(10);
+
+ res.json(data);
+
+});
+
+app.get("/leaderboard/battles", async (req,res)=>{
+
+ const { data } = await supabase
+ .from("players")
+ .select("*")
+ .order("total_battles",{ascending:false})
+ .limit(10);
+
+ res.json(data);
+
+});
+
 
 server.listen(PORT,()=>{
 
