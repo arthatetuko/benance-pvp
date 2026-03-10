@@ -172,6 +172,7 @@ font-size:14px;
 ⚔ Battles: <span id="statBattles">0</span><br>
 💰 Volume: <span id="statVolume">0</span> LUNC<br>
 👥 Players: <span id="statPlayers">0</span>
+🟢 Online: <span id="onlinePlayers">0</span>
 
 </div>
 
@@ -912,6 +913,12 @@ socket.on("opponentDead",()=>{
 socket.on("battleCanceled",()=>{
 
  document.getElementById("battleCanceledPopup").style.display="block";
+
+});
+
+socket.on("onlinePlayers",(count)=>{
+
+ document.getElementById("onlinePlayers").innerText = count;
 
 });
 

@@ -62,6 +62,8 @@ app.use(express.static(__dirname));
 let battles = [];
 let battleId = 1;
 
+let onlinePlayers = 0;
+
 function updatePlayers(){
 
  const now = Date.now();
@@ -119,6 +121,10 @@ setInterval(()=>{
 },1000);
 
 io.on("connection",(socket)=>{
+
+ onlinePlayers++;
+
+ io.emit("onlinePlayers", onlinePlayers);
 
 socket.on("registerWallet", async (wallet)=>{
 
@@ -583,6 +589,10 @@ await supabase.rpc("update_player_stats",{
 });
 
  socket.on("disconnect",()=>{
+
+ onlinePlayers--;
+
+io.emit("onlinePlayers", onlinePlayers);
 
  battles.forEach(b=>{
 
