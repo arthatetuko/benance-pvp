@@ -159,11 +159,29 @@ z-index:9999;
 
 <div id="menu">
 
+<div id="statsBox" style="
+background:#111;
+padding:10px;
+border-radius:8px;
+margin-bottom:15px;
+font-size:14px;
+">
+
+<b>Game Statistics</b><br>
+
+⚔ Battles: <span id="statBattles">0</span><br>
+💰 Volume: <span id="statVolume">0</span> LUNC<br>
+👥 Players: <span id="statPlayers">0</span>
+
+</div>
+
 <h2>Battle Lobby</h2>
 
 <input type="datetime-local" id="battleTime">
 
 <button id="createBattle">Create Battle</button>
+
+<button onclick="openLeaderboard()">Leaderboard</button>
 
 <button onclick="openSkinMenu()">Select Skin</button>
 
@@ -251,6 +269,50 @@ z-index:9999;
 <h2>GAME OVER</h2>
 
 <button onclick="location.reload()">Back</button>
+
+</div>
+
+<div id="leaderboardOverlay" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:9998;
+"></div>
+
+<div id="leaderboardPopup" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:20px;
+border-radius:12px;
+width:300px;
+max-height:420px;
+overflow-y:auto;
+text-align:center;
+z-index:9999;
+">
+
+<h2>Leaderboard</h2>
+
+<b>🏆 Top Winners</b>
+<div id="topWinners"></div>
+
+<br>
+
+<b>💰 Top Volume</b>
+<div id="topVolume"></div>
+
+<br>
+
+<b>⚔ Most Battles</b>
+<div id="topBattles"></div>
 
 </div>
 
@@ -384,6 +446,30 @@ if(!walletAddress){
 }
 
 socket.emit("registerWallet", walletAddress);
+
+function openLeaderboard(){
+
+ document.getElementById("leaderboardOverlay").style.display="block";
+ document.getElementById("leaderboardPopup").style.display="block";
+
+ loadLeaderboard();
+
+}
+
+function closeLeaderboard(){
+
+ document.getElementById("leaderboardOverlay").style.display="none";
+ document.getElementById("leaderboardPopup").style.display="none";
+
+}
+
+document.getElementById("leaderboardOverlay").onclick = ()=>{
+
+ closeLeaderboard();
+
+};
+
+
 
 function renderSkinList(){
 
@@ -901,6 +987,70 @@ document.addEventListener("touchstart",()=>{
  tapSound.play();
 
 });
+
+async function loadStats(){
+
+ try{
+
+  const res = await fetch("/stats");
+  const data = await res.json();
+
+  document.getElementById("statBattles").innerText = data.totalBattles;
+  document.getElementById("statVolume").innerText = formatLunc(data.totalVolume);
+  document.getElementById("statPlayers").innerText = data.totalPlayers;
+
+ }catch(e){
+  console.log("Stats error",e);
+ }
+
+}
+
+async function loadLeaderboard(){
+
+ try{
+
+  const w = await fetch("/leaderboard/winners");
+  const winners = await w.json();
+
+  const v = await fetch("/leaderboard/volume");
+  const volume = await v.json();
+
+  const b = await fetch("/leaderboard/battles");
+  const battles = await b.json();
+
+  renderLeaderboard("topWinners", winners, "total_wins");
+  renderLeaderboard("topVolume", volume, "total_volume");
+  renderLeaderboard("topBattles", battles, "total_battles");
+
+ }catch(e){
+  console.log("Leaderboard error",e);
+ }
+
+}
+
+function renderLeaderboard(id,data,key){
+
+ const el = document.getElementById(id);
+
+ el.innerHTML="";
+
+ data.slice(0,5).forEach((p,i)=>{
+
+  const short = p.wallet.slice(0,6) + "...";
+
+  const div = document.createElement("div");
+
+  div.innerText =
+   (i+1) + ". " + short + " - " + p[key];
+
+  el.appendChild(div);
+
+ });
+
+}
+
+loadStats();
+loadLeaderboard();
 
 function gameLoop(){
 
