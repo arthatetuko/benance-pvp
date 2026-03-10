@@ -339,6 +339,7 @@ const startOpponentY = 220;
 let birdY = startPlayerY;
 let velocity=0;
 let pipes=[];
+let passedPipes = new Set();
 let walletAddress = localStorage.getItem("wallet");
 let playerSkin = localStorage.getItem("skin") || "changpeng";
 
@@ -353,6 +354,13 @@ let birdFrames = [
 
 let opponents = {};
 let opponentPositions = {};
+// ===== SOUND EFFECT =====
+
+const tapSound = new Audio("sounds/tap.mp3");
+const pointSound = new Audio("sounds/point.mp3");
+
+tapSound.preload = "auto";
+pointSound.preload = "auto";
 
 birdFrames[0].src = "skins/" + playerSkin + "_1.png";
 birdFrames[1].src = "skins/" + playerSkin + "_2.png";
@@ -874,12 +882,24 @@ setInterval(()=>{
 
 document.addEventListener("click",()=>{
 
+ if(!gameActive) return;
+
  velocity=-6;
+
+ tapSound.currentTime = 0;
+ tapSound.play();
 
 });
 
 document.addEventListener("touchstart",()=>{
+
+ if(!gameActive) return;
+
  velocity=-6;
+
+ tapSound.currentTime = 0;
+ tapSound.play();
+
 });
 
 function gameLoop(){
@@ -983,6 +1003,15 @@ ctx.globalAlpha = 1;
 
  pipe.x -= 2;
 
+ if(!passedPipes.has(pipe) && pipe.x + 40 < 50){
+
+  passedPipes.add(pipe);
+
+  pointSound.currentTime = 0;
+  pointSound.play();
+
+ }
+
  // TOP PIPE
 let bodyHeight = pipe.y - 30;
 
@@ -1079,6 +1108,7 @@ function backToMenu(){
  room = null;
 
  pipes = [];
+ passedPipes.clear();
 
  birdY = startPlayerY;
  velocity = 0;
