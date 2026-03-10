@@ -915,6 +915,13 @@ socket.on("battleCanceled",()=>{
 
 });
 
+socket.on("statsUpdated", ()=>{
+
+ loadStats();
+ loadLeaderboard();
+
+});
+
 function getPrize(){
 
  socket.emit("claimPrize",{

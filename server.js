@@ -530,6 +530,8 @@ await supabase
 🎮 Battle ID: ${battle.id}`
   );
 
+  io.emit("statsUpdated");
+
   io.to(room).emit("opponentDead");
   io.to(room + "-peep").emit("opponentDead");
 
@@ -570,6 +572,8 @@ await supabase.rpc("update_player_stats",{
 💰 Prize: ${formatLunc(battle.pot)} LUNC
 🎮 Battle ID: ${battle.id}`
   );
+
+  io.emit("statsUpdated");
 
  socket.emit("youLose");
 
