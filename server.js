@@ -2,6 +2,48 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
+const axios = require("axios");
+
+const TELEGRAM_TOKEN = "8668823419:AAHxEj2klU5Uto42ec5IowPbeoubz4UjnmQ";
+const TELEGRAM_CHAT_ID = "-1002724802750";
+const TELEGRAM_TOPIC_ID = 2554;
+
+async function sendTelegram(message){
+
+ try{
+
+  await axios.post(
+   `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
+   {
+    chat_id: TELEGRAM_CHAT_ID,
+    message_thread_id: TELEGRAM_TOPIC_ID,
+    text: message
+   }
+  );
+
+ }catch(err){
+
+  console.log("Telegram error:", err.message);
+
+ }
+
+}
+
+function formatLunc(amount){
+ return Number(amount).toLocaleString("en-US",{
+  minimumFractionDigits:2,
+  maximumFractionDigits:2
+ });
+}
+
+function getUTCDate(){
+
+ const now = new Date();
+
+ return now.toISOString().replace("T"," ").replace("Z"," UTC");
+
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -108,6 +150,17 @@ socket.emit("battleList", visibleBattles);
 };
 
  battles.push(battle);
+ sendTelegram(
+`🔥 NEW BENANCE PvP BATTLE
+
+Creator: ${battle.creator}
+
+💰 Bet: ${formatLunc(data.bet)} LUNC
+🎮 Battle ID: ${battle.id}
+📅 ${getUTCDate()}
+
+⚔ Waiting for challenger`
+);
 
  io.sockets.sockets.forEach(s => {
 
@@ -152,7 +205,7 @@ socket.on("cancelBattle",(data)=>{
   return;
 
  }
- 
+
  io.to(peepRoom).emit("battleCanceled");
 
  battles.splice(index,1);
@@ -307,6 +360,19 @@ socket.to(room + "-peep").emit("opponentSkin",{
  battle.pot += Number(data.bet);
  battle.status = "PLAYER READY";
 
+ sendTelegram(
+`⚔ BENANCE PvP MATCH ACCEPTED
+
+Creator: ${battle.creator}
+Challenger: ${data.wallet}
+
+💰 Bet: ${formatLunc(battle.bet)} LUNC
+🎮 Battle ID: ${battle.id}
+📅 ${getUTCDate()}
+
+🚀 Battle starting soon`
+);
+
 }
 
  updatePlayers();
@@ -416,6 +482,18 @@ socket.on("claimPrize",(data)=>{
   battle.finished = true;
   battle.status = "CLOSED";
 
+  const loser = socket.wallet;
+const winner = loser === battle.creator ? battle.challenger : battle.creator;
+
+  sendTelegram(
+`🏆 BENANCE PvP WINNER
+
+👑 Winner: ${winner}
+
+💰 Prize: ${formatLunc(battle.pot)} LUNC
+🎮 Battle ID: ${battle.id}`
+  );
+
   io.to(room).emit("opponentDead");
   io.to(room + "-peep").emit("opponentDead");
 
@@ -425,6 +503,18 @@ socket.on("claimPrize",(data)=>{
 
  // PvP normal
  battle.finished = true;
+
+ const loser = socket.wallet;
+const winner = loser === battle.creator ? battle.challenger : battle.creator;
+
+  sendTelegram(
+`🏆 BENANCE PvP WINNER
+
+👑 Winner: ${winner}
+
+💰 Prize: ${formatLunc(battle.pot)} LUNC
+🎮 Battle ID: ${battle.id}`
+  );
 
  socket.emit("youLose");
 
