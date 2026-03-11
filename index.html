@@ -489,6 +489,8 @@ document.getElementById("disconnectBtn").onclick = ()=>{
 
  walletAddress = null
 
+ localStorage.removeItem("wallet")
+
  document.getElementById("walletInfo").style.display = "none"
  document.getElementById("connectBtn").style.display = "block"
 
@@ -1370,6 +1372,24 @@ function backToMenu(){
 
 window.addEventListener("load", ()=>{
 
+ const savedWallet = localStorage.getItem("wallet")
+
+ if(savedWallet){
+
+  walletAddress = savedWallet
+
+  document.getElementById("connectBtn").style.display = "none"
+  document.getElementById("walletInfo").style.display = "block"
+
+  document.getElementById("walletAddress").innerText =
+   savedWallet.slice(0,6) + "..." + savedWallet.slice(-4)
+
+  loadWalletBalance(savedWallet)
+
+  socket.emit("registerWallet", savedWallet)
+
+ }
+
  document.getElementById("connectBtn").onclick = async ()=>{
 
  const address = await connectWallet()
@@ -1377,6 +1397,8 @@ window.addEventListener("load", ()=>{
  if(address){
 
   walletAddress = address
+
+  localStorage.setItem("wallet", address)
 
   document.getElementById("connectBtn").style.display = "none"
   document.getElementById("walletInfo").style.display = "block"
