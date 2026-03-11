@@ -206,48 +206,57 @@ Creator: ${battle.creator}
 socket.on("cancelBattle",(data)=>{
 
  const index = battles.findIndex(b=>b.id === data.id);
-
  if(index === -1) return;
 
  const battle = battles[index];
 
- // hanya creator yang boleh cancel
+ // hanya creator
  if(battle.creator !== data.wallet) return;
 
  const room = "battle-" + battle.id;
-
  const peepRoom = room + "-peep";
 
  const players = io.sockets.adapter.rooms.get(room)?.size || 0;
 
- // jika sudah ada challenger
+ // jika sudah ada challenger tidak boleh cancel
  if(players >= 1){
-
   socket.emit("cancelDenied","Can not cancel, battle has been accepted");
-
   return;
+ }
+
+ // =========================
+ // jika status REJECTED → berarti REFUND
+ // =========================
+
+ if(battle.status === "REJECTED"){
+
+  battles.splice(index,1);
+
+ }else{
+
+  // CANCEL battle
+  battle.status = "REJECTED";
+
+  // kirim notif ke spectator
+  io.to(peepRoom).emit("battleCanceled");
 
  }
 
- io.to(peepRoom).emit("battleCanceled");
+ // refresh battle list
+ io.sockets.sockets.forEach(s => {
 
- battles.splice(index,1);
+  const visibleBattles = battles.filter(b => {
 
-io.sockets.sockets.forEach(s => {
+   if(b.creator === s.wallet) return true;
+   if(b.status === "REJECTED") return false;
 
- const visibleBattles = battles.filter(b => {
+   return true;
 
-  if(b.creator === s.wallet) return true;
+  });
 
-  if(b.status === "REJECTED") return false;
-
-  return true;
+  s.emit("battleList", visibleBattles);
 
  });
-
- s.emit("battleList", visibleBattles);
-
-});
 
 });
 

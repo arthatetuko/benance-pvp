@@ -189,7 +189,7 @@ font-size:14px;
 
 <h2>Battle Lobby</h2>
 
-<input type="datetime-local" id="battleTime">
+<input type="text" id="battleTime" placeholder="Select battle time" readonly>
 
 <button id="createBattle">Create Battle</button>
 
@@ -657,21 +657,24 @@ div.style.background = cardColor;
   `;
 
 
-  if((status === "OPEN" || (status === "PLAYER READY" && b.creator === walletAddress)) && players < 2){
+const isCreator = b.creator && walletAddress &&
+ b.creator.toLowerCase() === walletAddress.toLowerCase();
+
+if((status === "OPEN" || (status === "PLAYER READY" && isCreator)) && players < 2){
  html += `<button onclick="joinBattle(${b.id})">JOIN</button>`;
 }else{
  html += `<button disabled>CLOSED</button>`;
 }
 
-if(b.creator !== walletAddress && status !== "CLOSED"){
+if(!isCreator && status !== "CLOSED"){
  html += `<button onclick="peepBattle(${b.id})">PEEP</button>`;
 }
 
-  if(b.creator === walletAddress && status !== "CLOSED"){
+if(isCreator){
 
  if(status === "REJECTED"){
   html += `<button onclick="cancelBattle(${b.id})">REFUND</button>`;
- }else{
+ }else if(status !== "CLOSED"){
   html += `<button onclick="cancelBattle(${b.id})">CANCEL</button>`;
  }
 
@@ -721,8 +724,10 @@ function renderCreateStep(){
  const iso = now.toISOString().slice(0,16);
 
  content.innerHTML = `
-  <input type="datetime-local" id="popupBattleTime" min="${iso}">
- `;
+<input type="date" id="popupDate" min="${iso.slice(0,10)}">
+<input type="number" id="popupHour" min="0" max="23" placeholder="Hour">
+<input type="number" id="popupMinute" min="0" max="59" placeholder="Minute">
+`;
 
  }
 
@@ -756,14 +761,22 @@ function createNext(){
 
  if(createStep === 1){
 
-  const time = document.getElementById("popupBattleTime").value;
+  const date = document.getElementById("popupDate").value;
+const hour = document.getElementById("popupHour").value;
+const minute = document.getElementById("popupMinute").value;
 
-  if(!time){
-   alert("Date not set");
-   return;
-  }
+if(!date || hour === "" || minute === ""){
+ alert("Date or time not set");
+ return;
+}
 
-  createBattleTime = new Date(time).getTime();
+const start = new Date(date);
+
+start.setHours(Number(hour));
+start.setMinutes(Number(minute));
+start.setSeconds(0);
+
+createBattleTime = start.getTime();
 
   createStep = 2;
   renderCreateStep();
