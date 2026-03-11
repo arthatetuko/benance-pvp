@@ -6,6 +6,8 @@
   "start": "node server.js"
  },
  "dependencies": {
+  "@cosmjs/cosmwasm-stargate": "^0.38.1",
+  "@cosmjs/stargate": "^0.38.1",
   "@supabase/supabase-js": "^2.99.0",
   "axios": "^1.13.6",
   "dotenv": "^17.3.1",

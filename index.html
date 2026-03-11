@@ -9,6 +9,11 @@
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
+<script src="https://unpkg.com/@cosmjs/cosmwasm-stargate@0.32.4/build/index.min.js"></script>
+<script src="https://unpkg.com/@cosmjs/stargate@0.32.4/build/index.min.js"></script>
+
+<script src="web3.js"></script>
+
 <style>
 
 body{
@@ -153,7 +158,13 @@ z-index:9999;
 
 <div id="wallet">
 
-<button>Connect Wallet</button>
+<button id="connectBtn">Connect Wallet</button>
+
+<div id="walletInfo" style="display:none;margin-top:6px;font-size:13px;">
+<div id="walletAddress"></div>
+<div id="walletBalance"></div>
+<button id="disconnectBtn" style="margin-top:5px;">Disconnect</button>
+</div>
 
 </div>
 
@@ -395,6 +406,7 @@ let createStep = 0;
 let createBattleTime = null;
 let createBet = null;
 let isDying = false;
+let walletAddress = null
 
 const startPlayerY = 170;
 const startOpponentY = 220;
@@ -403,7 +415,6 @@ let birdY = startPlayerY;
 let velocity=0;
 let pipes=[];
 let passedPipes = new Set();
-let walletAddress = localStorage.getItem("wallet");
 let playerSkin = localStorage.getItem("skin") || "changpeng";
 
 
@@ -438,15 +449,50 @@ socket.on("opponentSkin",(data)=>{
 
 });
 
-if(!walletAddress){
+async function loadWalletBalance(address){
 
- walletAddress = "player_" + Math.random().toString(36).substr(2,5);
+ try{
 
- localStorage.setItem("wallet",walletAddress);
+  const res = await fetch(
+   "https://terra-classic-lcd.publicnode.com/cosmos/bank/v1beta1/balances/" + address
+  )
+
+  const data = await res.json()
+
+  const lunc = data.balances.find(b => b.denom === "uluna")
+
+  let amount = 0
+
+  if(lunc){
+   amount = Number(lunc.amount) / 1000000
+  }
+
+  document.getElementById("walletBalance").innerText =
+   "Balance: " +
+   amount.toLocaleString("en-US",{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+   }) + " LUNC"
+
+ }catch(e){
+
+  console.log("Balance error:", e)
+
+  document.getElementById("walletBalance").innerText =
+   "Balance: error"
+
+ }
 
 }
 
-socket.emit("registerWallet", walletAddress);
+document.getElementById("disconnectBtn").onclick = ()=>{
+
+ walletAddress = null
+
+ document.getElementById("walletInfo").style.display = "none"
+ document.getElementById("connectBtn").style.display = "block"
+
+}
 
 function openLeaderboard(){
 
@@ -743,6 +789,11 @@ function createNext(){
  }
 
  if(createStep === 3){
+  
+  if(!walletAddress){
+  alert("Connect wallet first");
+  return;
+  }
 
   socket.emit("createBattle",{
    bet:createBet,
@@ -831,6 +882,11 @@ function peepBattle(id){
 }
 
 function joinBattle(id){
+
+ if(!walletAddress){
+ alert("Please connect wallet first");
+ return;
+}
 
  const battle = window.currentBattles.find(b => b.id === id);
 
@@ -1066,6 +1122,7 @@ function renderLeaderboard(id,data,key){
 loadStats();
 loadLeaderboard();
 
+
 function gameLoop(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -1296,8 +1353,33 @@ function backToMenu(){
  document.getElementById("menu").style.display = "block";
  document.getElementById("battleWarning").style.display="none";
  
-
 }
+
+window.addEventListener("load", ()=>{
+
+ document.getElementById("connectBtn").onclick = async ()=>{
+
+ const address = await connectWallet()
+
+ if(address){
+
+  walletAddress = address
+
+  document.getElementById("connectBtn").style.display = "none"
+  document.getElementById("walletInfo").style.display = "block"
+
+  document.getElementById("walletAddress").innerText =
+   address.slice(0,6) + "..." + address.slice(-4)
+
+  loadWalletBalance(address)
+
+  socket.emit("registerWallet", address)
+
+ }
+
+ }
+
+});
 
 gameLoop();
 
