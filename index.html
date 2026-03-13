@@ -397,8 +397,6 @@ pointer-events:none;
 
 <script>
 
-const { connectWallet, reconnectWallet, depositBattle, joinBattle, claimPrize } = window;
-
 const CONTRACT_ADDRESS = "terra18yrfs25t0ewk6u4nj6mgkdv4vcnngwkn54xyjyd6607swtmv0jwsswgl9y";
 
 const skins = [
@@ -880,7 +878,7 @@ async function createNext(){
   return;
  }
 
- const tx = await depositBattle(createBet, createBattleTime)
+ const tx = await window.depositBattle(createBet, createBattleTime)
 
 if(!tx){
  return
@@ -1008,7 +1006,7 @@ async function joinBattleLobby(id){
    return;
   }
 
-  const txHash = await joinBattle(battle.id, battle.bet)
+  const txHash = await window.joinBattle(battle.id, battle.bet)
 
 if(!txHash) return
 
@@ -1120,7 +1118,7 @@ async function getPrize(){
 
  const battleId = Number(room.replace("battle-",""))
 
- const txHash = await claimPrize(battleId)
+ const txHash = await window.claimPrize(battleId)
 
  if(!txHash){
   alert("Claim failed")
@@ -1501,7 +1499,7 @@ window.addEventListener("load", async ()=>{
 
  if(savedWallet){
 
- const address = await reconnectWallet()
+ const address = await window.reconnectWallet()
 
  if(address){
 
