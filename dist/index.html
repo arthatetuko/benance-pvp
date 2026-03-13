@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<title>Benance PvP</title>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+
+<style>
+
+body{
+ margin:0;
+ background:black;
+ font-family:Arial;
+ color:white;
+
+ touch-action:manipulation;
+}
+
+html, body{
+  margin:0;
+  height:100%;
+  overflow:hidden;
+  background:black;
+}
+
+#wallet{
+ position:absolute;
+ top:10px;
+ left:10px;
+ z-index:9999;
+}
+
+#menu{
+ position:absolute;
+ top:50%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ text-align:center;
+
+ width:90%;
+ max-width:340px;
+
+ max-height:85vh;
+ overflow-y:auto;
+
+ padding-bottom:20px;
+ z-index:10;
+}
+
+#battleList{
+ margin-top:20px;
+ max-height:55vh;
+ overflow-y:auto;
+
+ -webkit-overflow-scrolling:touch;
+}
+
+ #battleTime{
+ display:none;
+ }
+
+.battleCard{
+
+ background:#1e1e1e;
+ padding:15px;
+ margin:10px auto;
+ width:260px;
+
+ border-radius:8px;
+
+ box-shadow:0 0 10px rgba(0,0,0,0.6);
+
+}
+
+.battleCard button{
+
+ margin-top:8px;
+ margin-right:6px;
+
+ padding:10px 14px;
+ font-size:14px;
+
+ border:none;
+ border-radius:6px;
+
+ background:#2ecc71;
+ color:white;
+
+ cursor:pointer;
+
+}
+
+button{
+ padding:12px 16px;
+ font-size:16px;
+}
+
+.battleCard button:hover{
+ background:#27ae60;
+}
+
+canvas{
+ position:absolute;
+ top:50%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ display:block;
+ z-index:1;
+}
+
+</style>
+
+  <script type="module" crossorigin src="/assets/index-CM1cCEkw.js"></script>
+</head>
+
+<body>
+
+<div id="skinOverlay" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:9998;
+"></div>
+
+<div id="skinPopup" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:20px;
+border-radius:12px;
+width:300px;
+max-height:420px;
+overflow-y:auto;
+text-align:center;
+z-index:9999;
+">
+
+<h2>Select Skin</h2>
+
+<div id="skinList"></div>
+
+</div>
+
+<div id="wallet">
+
+<button id="connectBtn">Connect Wallet</button>
+
+<div id="walletInfo" style="display:none;margin-top:6px;font-size:13px;">
+<div id="walletAddress"></div>
+<div id="walletBalance"></div>
+<button id="disconnectBtn" style="margin-top:5px;">Disconnect</button>
+</div>
+
+</div>
+
+<div id="menu">
+
+<div id="statsBox" style="
+background:#111;
+padding:10px;
+border-radius:8px;
+margin-bottom:15px;
+font-size:14px;
+">
+
+<b>Game Statistics</b><br>
+
+⚔ Battles: <span id="statBattles">0</span><br>
+💰 Volume: <span id="statVolume">0</span> LUNC<br>
+👥 Players: <span id="statPlayers">0</span>
+🟢 Online: <span id="onlinePlayers">0</span>
+
+</div>
+
+<h2>Battle Lobby</h2>
+
+<input type="text" id="battleTime" placeholder="Select battle time" readonly>
+
+<button id="createBattle">Create Battle</button>
+
+<button onclick="openLeaderboard()">Leaderboard</button>
+
+<button onclick="openSkinMenu()">Select Skin</button>
+
+<div id="battleList"></div>
+
+</div>
+
+<div id="status" style="
+ position:absolute;
+ top:120px;
+ width:100%;
+ text-align:center;
+ font-size:30px;
+ font-weight:bold;
+"></div>
+
+<div id="winPopup" style="
+ display:none;
+ position:absolute;
+ top:50%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ background:#222;
+ padding:30px;
+ border-radius:10px;
+ text-align:center;
+ z-index:1000;
+">
+
+<h2>YOU WIN</h2>
+<p>Claim your reward to return to lobby</p>
+
+<button onclick="getPrize()">CLAIM PRIZE</button>
+
+</div>
+
+<div id="createOverlay" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:9998;
+"></div>
+
+<div id="createPopup" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:25px;
+border-radius:12px;
+width:300px;
+text-align:center;
+z-index:9999;
+">
+
+<h3 id="createTitle">Set Battle Time</h3>
+
+<div id="createContent"></div>
+
+<br>
+
+<button onclick="closeCreateBattle()">Close</button>
+<button onclick="createNext()">Next</button>
+</div>
+
+<div id="spectatorGameOver" style="
+ display:none;
+ position:absolute;
+ top:50%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ background:#222;
+ padding:30px;
+ border-radius:10px;
+ text-align:center;
+ z-index:1000;
+">
+
+<h2>GAME OVER</h2>
+
+<button onclick="location.reload()">Back</button>
+
+</div>
+
+<div id="leaderboardOverlay" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:9998;
+"></div>
+
+<div id="leaderboardPopup" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:20px;
+border-radius:12px;
+width:300px;
+max-height:420px;
+overflow-y:auto;
+text-align:center;
+z-index:9999;
+">
+
+<h2>Leaderboard</h2>
+
+<b>🏆 Top Winners</b>
+<div id="topWinners"></div>
+
+<br>
+
+<b>💰 Top Volume</b>
+<div id="topVolume"></div>
+
+<br>
+
+<b>⚔ Most Battles</b>
+<div id="topBattles"></div>
+
+</div>
+
+<div id="battleCanceledPopup" style="
+ display:none;
+ position:absolute;
+ top:50%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ background:#222;
+ padding:30px;
+ border-radius:10px;
+ text-align:center;
+ z-index:1000;
+">
+
+ <h2>Battle has been canceled</h2>
+
+ <br>
+
+ <button onclick="location.reload()">Back</button>
+
+</div>
+
+<div id="txPopup" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:25px;
+border-radius:12px;
+width:320px;
+text-align:center;
+z-index:10000;
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+">
+
+<h3 id="txTitle">Transaction</h3>
+
+<div id="txMessage" style="
+font-size:13px;
+word-break:break-all;
+margin-top:10px;
+margin-bottom:15px;
+"></div>
+
+<button onclick="closeTxPopup()">OK</button>
+
+</div>
+
+</div>
+
+<div id="battleWarning" style="
+display:none;
+position:absolute;
+bottom:10px;
+width:100%;
+text-align:center;
+font-size:12px;
+color:#ff0000;
+background:rgba(0,0,0,0.6);
+padding:6px;
+z-index:5;
+pointer-events:none;
+">
+⚠ Do not leave or refresh the page during countdown & battle. Leaving will count as a loss.
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+
+const CONTRACT_ADDRESS = "terra18yrfs25t0ewk6u4nj6mgkdv4vcnngwkn54xyjyd6607swtmv0jwsswgl9y";
+
+const skins = [
+ {name:"Changpeng", file:"changpeng"},
+ {name:"DO", file:"do"},
+ {name:"Garuda", file:"garuda"},
+ {name:"LUNC169", file:"lunc169"},
+ {name:"Rocket", file:"rocket"}
+];
+
+// background
+const bgImage = new Image();
+bgImage.src = "skins/background.png";
+
+let bgX = 0;
+
+
+// pipe images
+const pipeBody = new Image();
+pipeBody.src = "skins/pipe_body_red.png";
+
+const pipeHead = new Image();
+pipeHead.src = "skins/pipe_head_red.png";
+
+const socket = io({
+ transports:["websocket"],
+ reconnection:true,
+ reconnectionAttempts:5,
+ reconnectionDelay:1000
+});
+
+let gameActive = false;
+let room=null;
+let seed;
+let startTime=0;
+let countdownInterval = null;
+let statusText = "";
+let isSpectator = false;
+let createStep = 0;
+let createBattleTime = null;
+let createBet = null;
+let isDying = false;
+
+const startPlayerY = 170;
+const startOpponentY = 220;
+
+let birdY = startPlayerY;
+let velocity=0;
+let pipes=[];
+let passedPipes = new Set();
+let playerSkin = localStorage.getItem("skin") || "changpeng";
+
+
+let birdFrame = 0;
+let flapTimer = 0;
+
+let birdFrames = [
+ new Image(),
+ new Image()
+];
+
+let opponents = {};
+let opponentPositions = {};
+// ===== SOUND EFFECT =====
+
+const tapSound = new Audio("sounds/tap.mp3");
+const pointSound = new Audio("sounds/point.mp3");
+
+tapSound.preload = "auto";
+pointSound.preload = "auto";
+
+birdFrames[0].src = "skins/" + playerSkin + "_1.png";
+birdFrames[1].src = "skins/" + playerSkin + "_2.png";
+
+socket.on("opponentSkin",(data)=>{
+
+ const img = new Image();
+
+ img.src = "skins/" + data.skin + "_1.png";
+
+ opponents[data.id] = img;
+
+});
+
+async function loadWalletBalance(address){
+
+ try{
+
+  const res = await fetch(
+   "https://terra-classic-lcd.publicnode.com/cosmos/bank/v1beta1/balances/" + address
+  )
+
+  const data = await res.json()
+
+  const lunc = data.balances.find(b => b.denom === "uluna")
+
+  let amount = 0
+
+  if(lunc){
+   amount = Number(lunc.amount) / 1000000
+  }
+
+  document.getElementById("walletBalance").innerText =
+   "Balance: " +
+   amount.toLocaleString("en-US",{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+   }) + " LUNC"
+
+ }catch(e){
+
+  console.log("Balance error:", e)
+
+  document.getElementById("walletBalance").innerText =
+   "Balance: error"
+
+ }
+
+}
+
+document.getElementById("disconnectBtn").onclick = ()=>{
+
+ walletAddress = null
+
+ localStorage.removeItem("wallet")
+
+ document.getElementById("walletInfo").style.display = "none"
+ document.getElementById("connectBtn").style.display = "block"
+
+}
+
+function openLeaderboard(){
+
+ document.getElementById("leaderboardOverlay").style.display="block";
+ document.getElementById("leaderboardPopup").style.display="block";
+
+ loadLeaderboard();
+
+}
+
+function closeLeaderboard(){
+
+ document.getElementById("leaderboardOverlay").style.display="none";
+ document.getElementById("leaderboardPopup").style.display="none";
+
+}
+
+document.getElementById("leaderboardOverlay").onclick = ()=>{
+
+ closeLeaderboard();
+
+};
+
+
+
+function renderSkinList(){
+
+ const list = document.getElementById("skinList");
+
+ list.innerHTML="";
+
+ skins.forEach(s=>{
+
+ const div = document.createElement("div");
+
+ div.style.marginBottom = "15px";
+ div.style.cursor = "pointer";
+
+ div.innerHTML = `
+  <img src="skins/${s.file}_1.png" width="60"><br>
+  ${s.name}
+ `;
+
+ div.onclick = ()=>{
+  selectSkin(s.file);
+ };
+
+ list.appendChild(div);
+
+});
+
+}
+
+function selectSkin(file){
+
+ playerSkin = file;
+
+ localStorage.setItem("skin",file);
+
+ birdFrames[0].src = "skins/" + file + "_1.png";
+ birdFrames[1].src = "skins/" + file + "_2.png";
+
+ alert("Skin selected");
+
+ closeSkinMenu();
+
+}
+
+function setMinBattleTime(){
+
+ const now = new Date();
+
+ now.setSeconds(0);
+ now.setMilliseconds(0);
+
+ const iso = now.toISOString().slice(0,16);
+
+ document.getElementById("battleTime").min = iso;
+
+}
+
+setMinBattleTime();
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const baseWidth = 360;
+const baseHeight = 640;
+
+function resizeCanvas(){
+
+ const screenWidth = window.innerWidth;
+ const screenHeight = window.innerHeight;
+
+ const scale = Math.min(
+  screenWidth / baseWidth,
+  screenHeight / baseHeight
+ );
+
+ const renderWidth = baseWidth * scale;
+ const renderHeight = baseHeight * scale;
+
+ canvas.style.width = renderWidth + "px";
+ canvas.style.height = renderHeight + "px";
+
+ canvas.width = baseWidth;
+ canvas.height = baseHeight;
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+socket.on("battleList",(battles)=>{
+
+ window.currentBattles = battles;
+
+ const list = document.getElementById("battleList");
+
+ list.innerHTML="";
+
+ battles.forEach(b=>{
+
+  const div=document.createElement("div");
+  
+  const now = Date.now();
+  
+  let status = b.status || "OPEN";
+  
+  const diff = b.startTime - now;
+
+  let cardColor = "#1e1e1e";
+
+if(status === "REJECTED"){
+ cardColor = "#555555";
+}
+else if(now >= b.startTime){
+ status = "CLOSED";
+ cardColor = "#333333";
+}
+
+else if(diff <= 60000){ 
+ cardColor = "#8b0000"; // merah
+}
+
+else if(diff <= 300000){
+ cardColor = "#b8860b"; // kuning
+}
+
+div.className="battleCard";
+div.style.background = cardColor;
+
+  const players = b.players || 0;
+
+
+  let html = `
+  <b>Battle #${b.id}</b><br>
+  Bet: ${formatLunc(b.bet)} LUNC<br>
+  Start: <span id="timer-${b.id}"></span><br>
+  Players: ${players}/2<br>
+  PEEP: ${b.peeps || 0}<br>
+  Status: ${status}<br>
+  `;
+
+
+const isCreator = b.creator && walletAddress &&
+ b.creator.toLowerCase() === String(walletAddress).toLowerCase()
+
+if((status === "OPEN" || (status === "PLAYER READY" && isCreator)) && players < 2){
+ html += `<button onclick="joinBattleLobby(${b.id})">JOIN</button>`;
+}else{
+ html += `<button disabled>CLOSED</button>`;
+}
+
+if(!isCreator && status !== "CLOSED"){
+ html += `<button onclick="peepBattle(${b.id})">PEEP</button>`;
+}
+
+if(isCreator){
+
+ if(status === "REJECTED"){
+  html += `<button onclick="cancelBattle(${b.id})">REFUND</button>`;
+ }
+
+ else if(status === "OPEN"){
+  html += `<button onclick="cancelBattle(${b.id})">CANCEL</button>`;
+ }
+
+}
+
+  div.innerHTML = html;
+
+  list.appendChild(div);
+
+  startLobbyTimer(b.id, b.startTime);
+
+ });
+
+});
+
+function openCreateBattle(){
+
+ createStep = 1;
+
+ document.getElementById("createOverlay").style.display="block";
+ document.getElementById("createPopup").style.display="block";
+
+ renderCreateStep();
+
+}
+
+function closeTxPopup(){
+document.getElementById("txPopup").style.display="none"
+}
+
+function closeCreateBattle(){
+
+ document.getElementById("createOverlay").style.display="none";
+ document.getElementById("createPopup").style.display="none";
+
+}
+
+function showTxPopup(title, txHash){
+
+ document.getElementById("txTitle").innerText = title
+
+ document.getElementById("txMessage").innerHTML =
+ "TxHash:<br><br>" +
+ "<a target='_blank' href='https://finder.terra.money/classic/tx/"+txHash+"'>" +
+ txHash +
+ "</a>"
+
+ document.getElementById("txPopup").style.display = "block"
+
+}
+
+function closeTxPopup(){
+ document.getElementById("txPopup").style.display = "none"
+}
+
+function renderCreateStep(){
+
+ const title = document.getElementById("createTitle");
+ const content = document.getElementById("createContent");
+
+ if(createStep === 1){
+
+ title.innerText = "Set Battle Time";
+
+ const now = new Date();
+ now.setSeconds(0);
+ now.setMilliseconds(0);
+
+ const iso = now.toISOString().slice(0,16);
+
+ content.innerHTML = `
+<input type="date" id="popupDate" min="${iso.slice(0,10)}">
+<input type="number" id="popupHour" min="0" max="23" placeholder="Hour">
+<input type="number" id="popupMinute" min="0" max="59" placeholder="Minute">
+`;
+
+ }
+
+ if(createStep === 2){
+
+  title.innerText = "Enter Bet";
+
+  content.innerHTML = `
+   <input type="number" id="popupBet" placeholder="LUNC amount">
+  `;
+
+ }
+
+ if(createStep === 3){
+
+  title.innerText = "Confirm Deposit";
+
+  content.innerHTML = `
+   Deposit ${formatLunc(createBet)} LUNC to create this battle?
+  `;
+
+ }
+
+}
+ 
+document.getElementById("createBattle").onclick=()=>{
+ openCreateBattle();
+};
+
+async function createNext(){
+
+ if(createStep === 1){
+
+ const date = document.getElementById("popupDate").value;
+ const hour = document.getElementById("popupHour").value;
+ const minute = document.getElementById("popupMinute").value;
+
+ 
+
+ if(!date || hour === "" || minute === ""){
+  alert("Date or time not set");
+  return;
+ }
+
+ const start = new Date(date);
+
+ start.setHours(Number(hour));
+ start.setMinutes(Number(minute));
+ start.setSeconds(0);
+
+ const now = Date.now();
+
+ // minimal 60 detik dari sekarang
+ const minTime = now + 60000;
+
+ if(start.getTime() <= minTime){
+  alert("Battle must be scheduled at least 1 minute from now");
+  return;
+ }
+
+ createBattleTime = start.getTime();
+
+ createStep = 2;
+ renderCreateStep();
+ return;
+
+}
+
+ if(createStep === 2){
+
+  const bet = document.getElementById("popupBet").value;
+
+  if(!bet){
+   alert("Enter bet");
+   return;
+  }
+
+  createBet = Number(bet);
+
+  createStep = 3;
+  renderCreateStep();
+  return;
+
+ }
+
+ if(createStep === 3){
+
+ if(!walletAddress){
+  alert("Connect wallet first");
+  return;
+ }
+
+ const tx = await depositBattle(createBet, createBattleTime)
+
+if(!tx){
+ return
+}
+
+const txHash = tx.transactionHash || tx.hash
+
+console.log("TX HASH:", txHash)
+
+socket.emit("createBattle",{
+ bet:Number(createBet),
+ startTime:Number(createBattleTime),
+ creator:walletAddress,
+ txHash:txHash
+})
+
+showTxPopup(
+ "Create Battle Success",
+ txHash
+)
+
+closeCreateBattle()
+
+}
+
+} 
+
+function openSkinMenu(){
+
+ document.getElementById("skinOverlay").style.display="block";
+ document.getElementById("skinPopup").style.display="block";
+
+ renderSkinList();
+
+}
+
+function closeSkinMenu(){
+
+ document.getElementById("skinPopup").style.display = "none";
+ document.getElementById("skinOverlay").style.display = "none";
+
+}
+
+document.getElementById("skinOverlay").onclick = ()=>{
+ closeSkinMenu();
+};
+
+function startLobbyTimer(id,startTime){
+
+ const el = document.getElementById("timer-"+id);
+
+ function update(){
+
+  const diff = startTime - Date.now();
+
+  if(diff <= 0){
+
+   el.innerText="Starting...";
+   return;
+
+  }
+
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000)/3600000);
+  const m = Math.floor((diff % 3600000)/60000);
+  const s = Math.floor((diff % 60000)/1000);
+
+  el.innerText =
+   d+"d "+h+"h "+m+"m "+s+"s";
+
+ }
+
+ update();
+
+ setInterval(update,1000);
+
+}
+
+async function cancelBattle(id){
+
+ if(!confirm("Cancel this battle and refund deposit?")){
+  return;
+ }
+
+ // panggil smart contract dulu
+ const success = await cancelBattleContract(id);
+
+ if(!success){
+  return;
+ }
+
+ // jika tx sukses baru inform server
+ socket.emit("cancelBattle", id);
+
+}
+
+function peepBattle(id){
+
+ room = "battle-" + id;
+
+ isSpectator = true;
+
+ socket.emit("peepBattle",{id:id});
+
+ document.getElementById("menu").style.display="none";
+
+}
+
+async function joinBattleLobby(id){
+
+ if(!walletAddress){
+  alert("Please connect wallet first");
+  return;
+ }
+
+ const battle = window.currentBattles.find(b => b.id === id);
+ if(!battle) return;
+
+ const bet = battle.bet;
+
+ // creator tidak perlu deposit
+ if(battle.creator !== walletAddress){
+
+  if(!confirm("Deposit "+formatLunc(bet)+" LUNC to join this battle?")){
+   return;
+  }
+
+  const txHash = await joinBattle(battle.id, battle.bet)
+
+if(!txHash) return
+
+showTxPopup(
+"Join Battle Success",
+txHash
+)
+
+room = "battle-" + id;
+
+socket.emit("joinBattle",{
+ id:id,
+ wallet:walletAddress,
+ bet:bet,
+ skin:playerSkin,
+ txHash: txHash
+});
+
+ }
+ else{
+
+  room = "battle-" + id;
+
+  socket.emit("joinBattle",{
+   id:id,
+   wallet:walletAddress,
+   bet:bet,
+   skin:playerSkin
+  });
+
+ }
+
+ document.getElementById("menu").style.display="none";
+ document.getElementById("battleWarning").style.display="block";
+
+}
+
+function formatLunc(amount){
+
+ return Number(amount).toLocaleString("en-US",{
+  minimumFractionDigits:2,
+  maximumFractionDigits:2
+ });
+
+}
+
+socket.on("startGame",(data)=>{
+
+ seed = data.seed;
+ startTime = data.startTime;
+
+ startCountdown();
+
+});
+
+socket.on("joinDenied",(msg)=>{
+ alert(msg);
+});
+
+socket.on("opponentPosition",(data)=>{
+ opponentPositions[data.id] = data.y;
+});
+
+socket.on("youLose",()=>{
+
+ if(isSpectator) return;
+
+ alert("YOU LOSE");
+
+ backToMenu();
+
+});
+
+socket.on("opponentDead",()=>{
+
+ if(isSpectator){
+
+  document.getElementById("spectatorGameOver").style.display="block";
+  return;
+
+ }
+
+ document.getElementById("winPopup").style.display="block";
+
+});
+
+socket.on("battleCanceled",()=>{
+
+ document.getElementById("battleCanceledPopup").style.display="block";
+
+});
+
+socket.on("onlinePlayers",(count)=>{
+
+ document.getElementById("onlinePlayers").innerText = count;
+
+});
+
+socket.on("statsUpdated", ()=>{
+
+ loadStats();
+ loadLeaderboard();
+
+});
+
+async function getPrize(){
+
+ console.log("CLAIM BUTTON CLICKED")
+
+ const battleId = Number(room.replace("battle-",""))
+
+ const txHash = await claimPrize(battleId)
+
+ if(!txHash){
+  alert("Claim failed")
+  return
+ }
+
+ showTxPopup(
+  "Prize Claimed",
+  txHash
+ )
+
+ // sembunyikan win popup
+ document.getElementById("winPopup").style.display = "none"
+
+ // kembali ke lobby
+ backToMenu()
+
+}
+
+socket.on("cancelDenied",(msg)=>{
+ alert(msg);
+});
+
+function seededRandom(){
+
+ const x = Math.sin(seed++) * 10000;
+ return x - Math.floor(x);
+
+}
+
+function createPipe(){
+
+ const gap = 220;
+
+ const minY = 50;
+ const maxY = canvas.height - gap - 50;
+
+ const y = minY + seededRandom() * (maxY - minY);
+
+ pipes.push({
+  x:canvas.width + 50,
+  y:y,
+  gap:gap
+ });
+
+}
+
+setInterval(()=>{
+
+ if(gameActive && Date.now() > startTime + 2000){
+  createPipe();
+ }
+
+},2000);
+
+document.addEventListener("click",()=>{
+
+ if(!gameActive) return;
+
+ velocity=-6;
+
+ tapSound.currentTime = 0;
+ tapSound.play();
+
+});
+
+document.addEventListener("touchstart",()=>{
+
+ if(!gameActive) return;
+
+ velocity=-6;
+
+ tapSound.currentTime = 0;
+ tapSound.play();
+
+});
+
+async function loadStats(){
+
+ try{
+
+  const res = await fetch("/stats");
+  const data = await res.json();
+
+  document.getElementById("statBattles").innerText = data.totalBattles;
+  document.getElementById("statVolume").innerText = formatLunc(data.totalVolume);
+  document.getElementById("statPlayers").innerText = data.totalPlayers;
+
+ }catch(e){
+  console.log("Stats error",e);
+ }
+
+}
+
+async function loadLeaderboard(){
+
+ try{
+
+  const w = await fetch("/leaderboard/winners");
+  const winners = await w.json();
+
+  const v = await fetch("/leaderboard/volume");
+  const volume = await v.json();
+
+  const b = await fetch("/leaderboard/battles");
+  const battles = await b.json();
+
+  renderLeaderboard("topWinners", winners, "total_wins");
+  renderLeaderboard("topVolume", volume, "total_volume");
+  renderLeaderboard("topBattles", battles, "total_battles");
+
+ }catch(e){
+  console.log("Leaderboard error",e);
+ }
+
+}
+
+function renderLeaderboard(id,data,key){
+
+ const el = document.getElementById(id);
+
+ el.innerHTML="";
+
+ data.slice(0,5).forEach((p,i)=>{
+
+  const short = p.wallet.slice(0,6) + "...";
+
+  const div = document.createElement("div");
+
+  div.innerText =
+   (i+1) + ". " + short + " - " + p[key];
+
+  el.appendChild(div);
+
+ });
+
+}
+
+loadStats();
+loadLeaderboard();
+
+
+function gameLoop(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+// background scroll
+// background scroll
+bgX -= 0.4;
+
+if(bgX <= -bgImage.width){
+ bgX = 0;
+}
+
+ctx.drawImage(bgImage, bgX, 0);
+ctx.drawImage(bgImage, bgX + bgImage.width, 0);
+
+
+ // tampilkan text countdown walaupun game belum aktif
+ if(!gameActive){
+
+  if(statusText !== ""){
+
+   ctx.fillStyle="white";
+   ctx.font="40px Arial";
+   ctx.textAlign="center";
+
+   ctx.fillText(statusText, canvas.width/2, canvas.height/2);
+
+  }
+
+ }
+
+ if(!isSpectator){
+
+ if(isDying){
+  velocity += 0.6;
+  birdY += velocity;
+ }
+ else if(gameActive){
+  velocity += 0.4;
+  birdY += velocity;
+ }
+
+}
+
+ // mati jika menyentuh lantai
+if(!isSpectator){
+
+ if(birdY + 30 >= canvas.height){
+
+  if(gameActive){
+
+   gameActive = false;
+   socket.emit("playerDead",room);
+
+  }
+
+ }
+
+}
+
+ if(!isSpectator){
+ if(gameActive){
+ socket.emit("playerPosition",{y:birdY,room:room});
+}
+}
+
+ if(isSpectator){
+ ctx.globalAlpha = 0.4;
+}
+
+flapTimer++;
+
+if(flapTimer > 6){
+ birdFrame = (birdFrame + 1) % 2;
+ flapTimer = 0;
+}
+
+if(!isSpectator){
+ ctx.drawImage(birdFrames[birdFrame],50,birdY,50,50);
+}
+
+ctx.globalAlpha = 1;
+
+ Object.entries(opponents).forEach(([id,img])=>{
+
+ const y = opponentPositions[id] !== undefined ? opponentPositions[id] : startOpponentY;
+
+ if(img.complete && img.naturalWidth !== 0){
+
+  ctx.globalAlpha = 0.4;
+  ctx.drawImage(img,50,y,50,50);
+  ctx.globalAlpha = 1;
+
+ }
+
+});
+
+ pipes.forEach(pipe=>{
+
+ pipe.x -= 2;
+
+ if(!passedPipes.has(pipe) && pipe.x + 40 < 50){
+
+  passedPipes.add(pipe);
+
+  pointSound.currentTime = 0;
+  pointSound.play();
+
+ }
+
+ // TOP PIPE
+let bodyHeight = pipe.y - 30;
+
+for(let y=0; y<bodyHeight; y+=32){
+ ctx.drawImage(pipeBody, pipe.x, y, 40, 32);
+}
+
+ctx.drawImage(pipeHead, pipe.x-5, pipe.y-30, 50, 30);
+
+
+// BOTTOM PIPE
+let bottomStart = pipe.y + pipe.gap;
+
+for(let y=bottomStart+30; y<canvas.height; y+=32){
+ ctx.drawImage(pipeBody, pipe.x, y, 40, 32);
+}
+
+ctx.drawImage(pipeHead, pipe.x-5, bottomStart, 50, 30);
+
+ if(!isSpectator){
+
+  if(50 < pipe.x + 40 && 70 > pipe.x){
+
+   if(birdY < pipe.y || birdY + 30 > pipe.y + pipe.gap){
+
+ if(!isDying){
+  isDying = true;
+  velocity = 5;
+ }
+
+ if(gameActive){
+  gameActive = false;
+  socket.emit("playerDead",room);
+ }
+
+}
+
+  }
+
+ }
+
+});
+
+ if(statusText !== ""){
+
+  ctx.fillStyle="white";
+  ctx.font="40px Arial";
+  ctx.textAlign="center";
+
+  ctx.fillText(statusText, canvas.width/2, canvas.height/2);
+
+ }
+
+ requestAnimationFrame(gameLoop);
+
+}
+
+function startCountdown(){
+ 
+  birdY = startPlayerY;
+
+ clearInterval(countdownInterval);
+
+ countdownInterval = setInterval(()=>{
+
+  const diff = startTime - Date.now();
+
+  if(diff <= 0){
+
+   clearInterval(countdownInterval);
+
+   statusText = "GO!";
+
+   gameActive = true;
+
+   setTimeout(()=>{
+    statusText="";
+   },1000);
+
+   return;
+  }
+
+  const seconds = Math.ceil(diff / 1000);
+
+  statusText = "Battle start in " + seconds;
+
+ },200);
+
+}
+
+function backToMenu(){
+
+ gameActive = false;
+ room = null;
+
+ pipes = [];
+ passedPipes.clear();
+
+ birdY = startPlayerY;
+ velocity = 0;
+
+ opponentY = startOpponentY;
+
+ opponents = {};
+ opponentPositions = {};
+
+ statusText = "";
+
+ seed = 0;
+
+ isSpectator = false;
+ isDying = false;
+
+ document.getElementById("winPopup").style.display="none";
+ document.getElementById("spectatorGameOver").style.display="none";
+ document.getElementById("battleCanceledPopup").style.display="none";
+
+ document.getElementById("menu").style.display = "block";
+ document.getElementById("battleWarning").style.display="none";
+ 
+}
+
+window.addEventListener("load", async ()=>{
+
+ const savedWallet = localStorage.getItem("wallet")
+
+ if(savedWallet){
+
+ const address = await reconnectWallet()
+
+ if(address){
+
+  walletAddress = address
+
+  document.getElementById("connectBtn").style.display = "none"
+  document.getElementById("walletInfo").style.display = "block"
+
+  document.getElementById("walletAddress").innerText =
+   address.slice(0,6) + "..." + address.slice(-4)
+
+  loadWalletBalance(address)
+
+  socket.emit("registerWallet", address)
+
+ }
+
+}
+
+ document.getElementById("connectBtn").onclick = async ()=>{
+
+ const address = await connectWallet()
+
+ if(address){
+
+  walletAddress = address
+
+  localStorage.setItem("wallet", address)
+
+  document.getElementById("connectBtn").style.display = "none"
+  document.getElementById("walletInfo").style.display = "block"
+
+  document.getElementById("walletAddress").innerText =
+   address.slice(0,6) + "..." + address.slice(-4)
+
+  loadWalletBalance(address)
+
+  socket.emit("registerWallet", address)
+
+ }
+
+ }
+
+});
+
+gameLoop();
+
+</script>
+
+
+</body>
+
+</html>
