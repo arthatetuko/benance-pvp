@@ -68,7 +68,7 @@ export async function reconnectWallet(){
 
 }
 
-export async function depositBattle(amount,startTime){
+export async function depositBattle(amount){
 
  if(!client){
   alert("Wallet not connected")
@@ -79,9 +79,9 @@ export async function depositBattle(amount,startTime){
   CreateBattle:{}
  }
 
- const funds=[{
+ const funds = [{
   denom:"uluna",
-  amount:String(Math.floor(amount*1000000))
+  amount:String(Math.floor(amount * 1000000))
  }]
 
  const result = await client.execute(
@@ -93,7 +93,9 @@ export async function depositBattle(amount,startTime){
   funds
  )
 
- return result
+ const txHash = result.transactionHash
+
+ return txHash
 }
 
 export async function joinBattle(battleId,amount){

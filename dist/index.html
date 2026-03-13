@@ -116,7 +116,7 @@ canvas{
 
 </style>
 
-  <script type="module" crossorigin src="/assets/index-BnqgdiHu.js"></script>
+  <script type="module" crossorigin src="/assets/index-i40Cfe98.js"></script>
 </head>
 
 <body>
@@ -878,7 +878,7 @@ async function createNext(){
   return;
  }
 
- const tx = await window.depositBattle(createBet, createBattleTime)
+ const tx = await window.depositBattle(createBet)
 
 if(!tx){
  return
@@ -891,7 +891,7 @@ console.log("TX HASH:", txHash)
 socket.emit("createBattle",{
  bet:Number(createBet),
  startTime:Number(createBattleTime),
- creator:walletAddress,
+ creator: window.getWalletAddress(),
  txHash:txHash
 })
 
