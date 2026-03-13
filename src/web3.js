@@ -150,3 +150,7 @@ export async function claimPrize(battleId){
 
  return tx.transactionHash
 }
+
+export function getWalletAddress(){
+ return walletAddress
+}

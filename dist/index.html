@@ -116,7 +116,7 @@ canvas{
 
 </style>
 
-  <script type="module" crossorigin src="/assets/index-i40Cfe98.js"></script>
+  <script type="module" crossorigin src="/assets/index-CrGBex8O.js"></script>
 </head>
 
 <body>
@@ -873,10 +873,10 @@ async function createNext(){
 
  if(createStep === 3){
 
- if(!walletAddress){
-  alert("Connect wallet first");
-  return;
- }
+ if(!window.getWalletAddress()){
+ alert("Connect wallet first")
+ return
+}
 
  const tx = await window.depositBattle(createBet)
 
@@ -884,7 +884,7 @@ if(!tx){
  return
 }
 
-const txHash = tx.transactionHash || tx.hash
+const txHash = tx.transactionHash
 
 console.log("TX HASH:", txHash)
 
