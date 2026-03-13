@@ -85,17 +85,15 @@ export async function depositBattle(amount){
  }]
 
  const result = await client.execute(
-  walletAddress,
-  CONTRACT_ADDRESS,
-  msg,
-  "auto",
-  "",
-  funds
- )
+ walletAddress,
+ CONTRACT_ADDRESS,
+ msg,
+ "auto",
+ "",
+ funds
+)
 
- const txHash = result.transactionHash
-
- return txHash
+return result
 }
 
 export async function joinBattle(battleId,amount){

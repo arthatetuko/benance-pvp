@@ -878,14 +878,16 @@ async function createNext(){
  return
 }
 
- const tx = await window.depositBattle(createBet)
+const tx = await window.depositBattle(createBet)
+
+console.log("TX RESULT:", tx)
 
 if(!tx){
+ console.log("TX FAILED")
  return
 }
 
 const txHash = tx.transactionHash
-
 console.log("TX HASH:", txHash)
 
 socket.emit("createBattle",{
