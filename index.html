@@ -9,10 +9,7 @@
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
-<script src="https://unpkg.com/@cosmjs/cosmwasm-stargate@0.32.4/build/index.min.js"></script>
-<script src="https://unpkg.com/@cosmjs/stargate@0.32.4/build/index.min.js"></script>
-
-<script src="web3.js"></script>
+<script type="module" src="/web3.js"></script>
 
 <style>
 
@@ -226,7 +223,7 @@ font-size:14px;
 <h2>YOU WIN</h2>
 <p>Claim your reward to return to lobby</p>
 
-<button onclick="getPrize(); location.reload();">CLAIM PRIZE</button>
+<button onclick="getPrize()">CLAIM PRIZE</button>
 
 </div>
 
@@ -349,6 +346,34 @@ z-index:9999;
 
 </div>
 
+<div id="txPopup" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:25px;
+border-radius:12px;
+width:320px;
+text-align:center;
+z-index:10000;
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+">
+
+<h3 id="txTitle">Transaction</h3>
+
+<div id="txMessage" style="
+font-size:13px;
+word-break:break-all;
+margin-top:10px;
+margin-bottom:15px;
+"></div>
+
+<button onclick="closeTxPopup()">OK</button>
+
+</div>
+
 </div>
 
 <div id="battleWarning" style="
@@ -370,6 +395,8 @@ pointer-events:none;
 <canvas id="game"></canvas>
 
 <script>
+
+const CONTRACT_ADDRESS = "terra18yrfs25t0ewk6u4nj6mgkdv4vcnngwkn54xyjyd6607swtmv0jwsswgl9y";
 
 const skins = [
  {name:"Changpeng", file:"changpeng"},
@@ -393,7 +420,12 @@ pipeBody.src = "skins/pipe_body_red.png";
 const pipeHead = new Image();
 pipeHead.src = "skins/pipe_head_red.png";
 
-const socket=io();
+const socket = io({
+ transports:["websocket"],
+ reconnection:true,
+ reconnectionAttempts:5,
+ reconnectionDelay:1000
+});
 
 let gameActive = false;
 let room=null;
@@ -406,7 +438,6 @@ let createStep = 0;
 let createBattleTime = null;
 let createBet = null;
 let isDying = false;
-let walletAddress = null
 
 const startPlayerY = 170;
 const startOpponentY = 220;
@@ -660,10 +691,10 @@ div.style.background = cardColor;
 
 
 const isCreator = b.creator && walletAddress &&
- b.creator.toLowerCase() === walletAddress.toLowerCase();
+ b.creator.toLowerCase() === String(walletAddress).toLowerCase()
 
 if((status === "OPEN" || (status === "PLAYER READY" && isCreator)) && players < 2){
- html += `<button onclick="joinBattle(${b.id})">JOIN</button>`;
+ html += `<button onclick="joinBattleLobby(${b.id})">JOIN</button>`;
 }else{
  html += `<button disabled>CLOSED</button>`;
 }
@@ -676,7 +707,9 @@ if(isCreator){
 
  if(status === "REJECTED"){
   html += `<button onclick="cancelBattle(${b.id})">REFUND</button>`;
- }else if(status !== "CLOSED"){
+ }
+
+ else if(status === "OPEN"){
   html += `<button onclick="cancelBattle(${b.id})">CANCEL</button>`;
  }
 
@@ -703,11 +736,33 @@ function openCreateBattle(){
 
 }
 
+function closeTxPopup(){
+document.getElementById("txPopup").style.display="none"
+}
+
 function closeCreateBattle(){
 
  document.getElementById("createOverlay").style.display="none";
  document.getElementById("createPopup").style.display="none";
 
+}
+
+function showTxPopup(title, txHash){
+
+ document.getElementById("txTitle").innerText = title
+
+ document.getElementById("txMessage").innerHTML =
+ "TxHash:<br><br>" +
+ "<a target='_blank' href='https://finder.terra.money/classic/tx/"+txHash+"'>" +
+ txHash +
+ "</a>"
+
+ document.getElementById("txPopup").style.display = "block"
+
+}
+
+function closeTxPopup(){
+ document.getElementById("txPopup").style.display = "none"
 }
 
 function renderCreateStep(){
@@ -759,32 +814,44 @@ document.getElementById("createBattle").onclick=()=>{
  openCreateBattle();
 };
 
-function createNext(){
+async function createNext(){
 
  if(createStep === 1){
 
-  const date = document.getElementById("popupDate").value;
-const hour = document.getElementById("popupHour").value;
-const minute = document.getElementById("popupMinute").value;
+ const date = document.getElementById("popupDate").value;
+ const hour = document.getElementById("popupHour").value;
+ const minute = document.getElementById("popupMinute").value;
 
-if(!date || hour === "" || minute === ""){
- alert("Date or time not set");
- return;
-}
+ 
 
-const start = new Date(date);
-
-start.setHours(Number(hour));
-start.setMinutes(Number(minute));
-start.setSeconds(0);
-
-createBattleTime = start.getTime();
-
-  createStep = 2;
-  renderCreateStep();
+ if(!date || hour === "" || minute === ""){
+  alert("Date or time not set");
   return;
-
  }
+
+ const start = new Date(date);
+
+ start.setHours(Number(hour));
+ start.setMinutes(Number(minute));
+ start.setSeconds(0);
+
+ const now = Date.now();
+
+ // minimal 60 detik dari sekarang
+ const minTime = now + 60000;
+
+ if(start.getTime() <= minTime){
+  alert("Battle must be scheduled at least 1 minute from now");
+  return;
+ }
+
+ createBattleTime = start.getTime();
+
+ createStep = 2;
+ renderCreateStep();
+ return;
+
+}
 
  if(createStep === 2){
 
@@ -804,21 +871,37 @@ createBattleTime = start.getTime();
  }
 
  if(createStep === 3){
-  
-  if(!walletAddress){
+
+ if(!walletAddress){
   alert("Connect wallet first");
   return;
-  }
-
-  socket.emit("createBattle",{
-   bet:createBet,
-   startTime:createBattleTime,
-   creator:walletAddress
-  });
-
-  closeCreateBattle();
-
  }
+
+ const tx = await depositBattle(createBet, createBattleTime)
+
+if(!tx){
+ return
+}
+
+const txHash = tx.transactionHash || tx.hash
+
+console.log("TX HASH:", txHash)
+
+socket.emit("createBattle",{
+ bet:Number(createBet),
+ startTime:Number(createBattleTime),
+ creator:walletAddress,
+ txHash:txHash
+})
+
+showTxPopup(
+ "Create Battle Success",
+ txHash
+)
+
+closeCreateBattle()
+
+}
 
 } 
 
@@ -873,14 +956,21 @@ function startLobbyTimer(id,startTime){
 
 }
 
-function cancelBattle(id){
+async function cancelBattle(id){
 
- if(!confirm("Cancel this battle?")) return;
+ if(!confirm("Cancel this battle and refund deposit?")){
+  return;
+ }
 
- socket.emit("cancelBattle",{
-  id:id,
-  wallet:walletAddress
- });
+ // panggil smart contract dulu
+ const success = await cancelBattleContract(id);
+
+ if(!success){
+  return;
+ }
+
+ // jika tx sukses baru inform server
+ socket.emit("cancelBattle", id);
 
 }
 
@@ -896,15 +986,14 @@ function peepBattle(id){
 
 }
 
-function joinBattle(id){
+async function joinBattleLobby(id){
 
  if(!walletAddress){
- alert("Please connect wallet first");
- return;
-}
+  alert("Please connect wallet first");
+  return;
+ }
 
  const battle = window.currentBattles.find(b => b.id === id);
-
  if(!battle) return;
 
  const bet = battle.bet;
@@ -916,16 +1005,38 @@ function joinBattle(id){
    return;
   }
 
+  const txHash = await joinBattle(battle.id, battle.bet)
+
+if(!txHash) return
+
+showTxPopup(
+"Join Battle Success",
+txHash
+)
+
+room = "battle-" + id;
+
+socket.emit("joinBattle",{
+ id:id,
+ wallet:walletAddress,
+ bet:bet,
+ skin:playerSkin,
+ txHash: txHash
+});
+
  }
+ else{
 
- room = "battle-" + id;
+  room = "battle-" + id;
 
- socket.emit("joinBattle",{
-  id:id,
-  wallet:walletAddress,
-  bet:bet,
-  skin:playerSkin
- });
+  socket.emit("joinBattle",{
+   id:id,
+   wallet:walletAddress,
+   bet:bet,
+   skin:playerSkin
+  });
+
+ }
 
  document.getElementById("menu").style.display="none";
  document.getElementById("battleWarning").style.display="block";
@@ -1000,18 +1111,29 @@ socket.on("statsUpdated", ()=>{
 
 });
 
-function getPrize(){
+async function getPrize(){
 
- socket.emit("claimPrize",{
-  room:room,
-  wallet:walletAddress
- });
+ console.log("CLAIM BUTTON CLICKED")
 
- alert("Prize claimed!");
+ const battleId = Number(room.replace("battle-",""))
 
- document.getElementById("winPopup").style.display="none";
+ const txHash = await claimPrize(battleId)
 
- backToMenu();
+ if(!txHash){
+  alert("Claim failed")
+  return
+ }
+
+ showTxPopup(
+  "Prize Claimed",
+  txHash
+ )
+
+ // sembunyikan win popup
+ document.getElementById("winPopup").style.display = "none"
+
+ // kembali ke lobby
+ backToMenu()
 
 }
 
@@ -1370,25 +1492,31 @@ function backToMenu(){
  
 }
 
-window.addEventListener("load", ()=>{
+window.addEventListener("load", async ()=>{
 
  const savedWallet = localStorage.getItem("wallet")
 
  if(savedWallet){
 
-  walletAddress = savedWallet
+ const address = await reconnectWallet()
+
+ if(address){
+
+  walletAddress = address
 
   document.getElementById("connectBtn").style.display = "none"
   document.getElementById("walletInfo").style.display = "block"
 
   document.getElementById("walletAddress").innerText =
-   savedWallet.slice(0,6) + "..." + savedWallet.slice(-4)
+   address.slice(0,6) + "..." + address.slice(-4)
 
-  loadWalletBalance(savedWallet)
+  loadWalletBalance(address)
 
-  socket.emit("registerWallet", savedWallet)
+  socket.emit("registerWallet", address)
 
  }
+
+}
 
  document.getElementById("connectBtn").onclick = async ()=>{
 
@@ -1417,6 +1545,25 @@ window.addEventListener("load", ()=>{
 });
 
 gameLoop();
+
+</script>
+
+<script type="module">
+
+import {
+ connectWallet,
+ depositBattle,
+ reconnectWallet,
+ joinBattle,
+ claimPrize
+} from "./web3.js"
+
+
+window.claimPrize = claimPrize
+window.connectWallet = connectWallet
+window.depositBattle = depositBattle
+window.reconnectWallet = reconnectWallet
+window.joinBattle = joinBattle
 
 </script>
 
