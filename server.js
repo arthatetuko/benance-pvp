@@ -40,3 +40,61 @@ const PORT=process.env.PORT||3000
 server.listen(PORT,()=>{
  console.log("Server running:",PORT)
 })
+
+socket.on("createBattle", async (data)=>{
+
+ console.log("CREATE BATTLE EVENT:", data);
+
+ const {bet,startTime,creator,txHash} = data
+
+ try{
+
+ const result = await verifyDeposit(txHash, Number(bet), creator)
+
+ if(!result || !result.valid){
+  socket.emit("joinDenied","Deposit verification failed")
+  return
+ }
+
+ const contractBattleId = result.battleId
+
+ const room = "battle-" + contractBattleId;
+
+ const battle={
+  id:contractBattleId,
+  creator:creator,
+  bet:Number(bet),
+  pot:Number(bet),
+  startTime:startTime,
+  challenger:null,
+  status:"OPEN",
+  room:room,
+  finished:false,
+  peeps:0
+ };
+
+ battles.push(battle);
+
+ console.log("BATTLE CREATED:", battle)
+
+ io.emit("battleList", battles)
+
+ sendTelegram(`🔥 NEW BENANCE PvP BATTLE
+
+Creator: ${battle.creator}
+
+💰 Bet: ${formatLunc(bet)} LUNC
+🎮 Battle ID: ${battle.id}
+📅 ${getUTCDate()}
+
+⚔ Waiting for challenger`)
+
+ }catch(err){
+
+ console.log("CREATE BATTLE ERROR:", err)
+
+ socket.emit("joinDenied","Server error")
+
+ }
+
+});
