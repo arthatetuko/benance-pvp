@@ -1521,9 +1521,8 @@ window.addEventListener("load", async ()=>{
 
 }
 
- document.getElementById("connectBtn").onclick = async ()=>{
-
- const address = await connectWallet()
+document.getElementById("connectBtn").onclick = async ()=>{
+ const address = await window.connectWallet()
 
  if(address){
 
