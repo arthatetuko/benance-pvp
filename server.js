@@ -27,19 +27,14 @@ app.get("*",(req,res)=>{
  res.sendFile(path.join(__dirname,"dist/index.html"))
 })
 
+let battles=[]
+
 io.on("connection",(socket)=>{
  console.log("player connected",socket.id)
 
  socket.on("disconnect",()=>{
   console.log("player disconnected")
- })
-})
-
-const PORT=process.env.PORT||3000
-
-server.listen(PORT,()=>{
- console.log("Server running:",PORT)
-})
+ });
 
 socket.on("createBattle", async (data)=>{
 
@@ -97,4 +92,13 @@ Creator: ${battle.creator}
 
  }
 
-});
+})
+
+})
+
+const PORT=process.env.PORT||3000
+
+server.listen(PORT,()=>{
+ console.log("Server running:",PORT)
+})
+
