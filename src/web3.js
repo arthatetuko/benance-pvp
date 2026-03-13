@@ -1,10 +1,5 @@
-import {
- SigningCosmWasmClient
-} from "https://esm.sh/@cosmjs/cosmwasm-stargate"
-
-import {
- GasPrice
-} from "https://esm.sh/@cosmjs/stargate"
+import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate"
+import { GasPrice } from "@cosmjs/stargate"
 
 const RPC = "https://terra-classic-rpc.publicnode.com"
 const CHAIN_ID = "columbus-5"
