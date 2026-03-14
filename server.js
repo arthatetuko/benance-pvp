@@ -219,31 +219,23 @@ async function initServerWallet(){
 
 async function submitWinner(battleId, winner){
 
- try{
-
-  const msg = {
-   SubmitWinner:{
-    battle_id: battleId,
-    winner: winner
-   }
+ const msg = {
+  SubmitWinner:{
+   battle_id: battleId,
+   winner: winner
   }
-
-  const result = await serverClient.execute(
-   serverAddress,
-   CONTRACT_ADDRESS,
-   msg,
-   "auto"
-  )
-
-  console.log("SubmitWinner success:", result.transactionHash)
-
- }catch(err){
-
-  console.error("SubmitWinner failed:", err)
-  console.log("Submitting winner:", winner)
-  console.log("Battle ID:", battleId)
-
  }
+
+ const result = await serverClient.execute(
+  serverAddress,
+  CONTRACT_ADDRESS,
+  msg,
+  "auto"
+ )
+
+ console.log("SubmitWinner success:", result.transactionHash)
+
+ return result.transactionHash
 
 }
 
@@ -749,7 +741,17 @@ if(roomSockets){
 
 }
 
-await submitWinner(battle.id, winner)
+const txHash = await submitWinner(battle.id, winner)
+
+io.to(room).emit("battleResult",{
+ winner: winner,
+ txHash: txHash
+})
+
+io.to(room + "-peep").emit("battleResult",{
+ winner: winner,
+ txHash: txHash
+})
 
 await supabase
  .from("battles")
@@ -812,7 +814,18 @@ if(roomSockets){
 }
 
 // 🔥 TAMBAHKAN INI
-await submitWinner(battle.id, winner)
+const txHash = await submitWinner(battle.id, winner)
+
+io.to(room).emit("battleResult",{
+ winner: winner,
+ txHash: txHash
+})
+
+io.to(room + "-peep").emit("battleResult",{
+ winner: winner,
+ txHash: txHash
+})
+
 
 await supabase
 .from("battles")
@@ -844,9 +857,6 @@ await supabase.rpc("update_player_stats",{
 
   io.emit("statsUpdated");
 
- socket.emit("youLose");
-
- socket.to(room).emit("opponentDead");
  io.to(room + "-peep").emit("opponentDead");
 
   socket.leave(room)
