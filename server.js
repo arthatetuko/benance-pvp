@@ -38,14 +38,6 @@ const io=new Server(server,{
  transports:["websocket","polling"]
 })
 
-/* SERVE DIST BUILD */
-app.use(express.static(path.join(__dirname,"dist")))
-
-app.get("*",(req,res)=>{
- res.sendFile(path.join(__dirname,"dist/index.html"))
-})
-
-
 let battles = [];
 
 let onlinePlayers = 0;
@@ -905,6 +897,9 @@ if(socket.rooms.has(peepRoom)){
 
 const PORT = process.env.PORT || 3000;
 
+/* SERVE DIST BUILD */
+app.use(express.static(path.join(__dirname,"dist")))
+
 app.get("/stats", async (req,res)=>{
 
  const { data: battles } = await supabase
@@ -964,6 +959,10 @@ app.get("/leaderboard/battles", async (req,res)=>{
  res.json(data);
 
 });
+
+app.get("*",(req,res)=>{
+ res.sendFile(path.join(__dirname,"dist/index.html"))
+})
 
 initServerWallet()
 
