@@ -1,6 +1,6 @@
 const RPC = "https://terra-classic-rpc.publicnode.com"
 const CHAIN_ID = "columbus-5"
-const CONTRACT_ADDRESS = "terra19aaz3w0lk2uvwc0gksypdtl0znjw96y7wfwx3sya7d4r54rqmqws2wqvw6"
+const CONTRACT_ADDRESS = "terra10fwuv4fdkss7uvnndlz66s8j455qturcqpum8ccurwj5yr88d7ssgvqrhw"
 
 let client = null
 let walletAddress = null
