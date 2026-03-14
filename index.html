@@ -1164,6 +1164,33 @@ socket.on("opponentDead",()=>{
 
 });
 
+socket.on("battleResult",(data)=>{
+
+ console.log("BATTLE RESULT:",data)
+
+ if(isSpectator){
+
+  document.getElementById("spectatorGameOver").style.display="block"
+  return
+
+ }
+
+ const myWallet = window.getWalletAddress()
+
+ if(data.winner === myWallet){
+
+  document.getElementById("winPopup").style.display="block"
+
+ }else{
+
+  alert("YOU LOSE")
+
+  backToMenu()
+
+ }
+
+})
+
 socket.on("battleCanceled",()=>{
 
  document.getElementById("battleCanceledPopup").style.display="block";
