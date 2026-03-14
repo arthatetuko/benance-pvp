@@ -1,18 +1,20 @@
-import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate"
+import {
+  SigningCosmWasmClient
+} from "@cosmjs/cosmwasm-stargate"
+
 import { GasPrice } from "@cosmjs/stargate"
 
 const RPC = "https://terra-classic-rpc.publicnode.com"
 const CHAIN_ID = "columbus-5"
-
 const CONTRACT_ADDRESS = "terra18yrfs25t0ewk6u4nj6mgkdv4vcnngwkn54xyjyd6607swtmv0jwsswgl9y"
 
-let client=null
-let walletAddress=null
+let client = null
+let walletAddress = null
 
 export async function connectWallet(){
 
  if(!window.keplr){
-  alert("Please install Keplr Wallet")
+  alert("Install Keplr Wallet")
   return null
  }
 
@@ -29,23 +31,22 @@ export async function connectWallet(){
  client = await SigningCosmWasmClient.connectWithSigner(
   RPC,
   offlineSigner,
-  {gasPrice}
+  { gasPrice }
  )
 
  return walletAddress
 }
 
-export async function reconnectWallet(){
+export async function reconnectWallet() {
 
- if(!window.keplr) return null
+ if (!window.keplr) return null
 
- try{
+ try {
 
   await window.keplr.enable(CHAIN_ID)
 
-  const signer = window.getOfflineSigner(CHAIN_ID)
-
-  const accounts = await signer.getAccounts()
+  const offlineSigner = window.getOfflineSigner(CHAIN_ID)
+  const accounts = await offlineSigner.getAccounts()
 
   walletAddress = accounts[0].address
 
@@ -53,22 +54,29 @@ export async function reconnectWallet(){
 
   client = await SigningCosmWasmClient.connectWithSigner(
    RPC,
-   signer,
-   {gasPrice}
+   offlineSigner,
+   { gasPrice }
   )
 
   return walletAddress
 
- }catch(err){
+ } catch (err) {
 
-  console.log("Reconnect failed",err)
-
+  console.log("Reconnect failed", err)
   return null
- }
 
+ }
 }
 
-export async function depositBattle(amount){
+export function getClient(){
+ return client
+}
+
+export function getWallet(){
+ return walletAddress
+}
+
+export async function depositBattle(amount, startTime){
 
  if(!client){
   alert("Wallet not connected")
@@ -76,8 +84,8 @@ export async function depositBattle(amount){
  }
 
  const msg = {
-  CreateBattle:{}
- }
+  CreateBattle: {}
+}
 
  const funds = [{
   denom:"uluna",
@@ -85,35 +93,35 @@ export async function depositBattle(amount){
  }]
 
  const result = await client.execute(
- walletAddress,
- CONTRACT_ADDRESS,
- msg,
- "auto",
- "",
- funds
-)
+  walletAddress,
+  CONTRACT_ADDRESS,
+  msg,
+  "auto",
+  "",
+  funds
+ )
 
-return result
+ return result
 }
 
 export async function cancelBattle(battleId){
 
- if(!client){
-  alert("Wallet not connected")
-  return null
- }
-
  try{
 
-  const msg = {
-   CancelBattle:{
-    battle_id: battleId
-   }
+  if(!client || !walletAddress){
+   console.error("Wallet not connected")
+   return false
   }
 
-  const fee={
-   amount:[{denom:"uluna",amount:"8000"}],
-   gas:"400000"
+  const msg = {
+ CancelBattle: {
+  battle_id: battleId
+ }
+}
+
+  const fee = {
+   amount: [{ denom: "uluna", amount: "8000" }],
+   gas: "400000"
   }
 
   const result = await client.execute(
@@ -125,50 +133,56 @@ export async function cancelBattle(battleId){
 
   console.log("Cancel success", result)
 
-  const txHash = result.transactionHash || result.hash
+// ambil tx hash
+const txHash = result.transactionHash || result.hash
 
-  if(typeof showTxPopup !== "undefined"){
-   showTxPopup("Battle Canceled", txHash)
-  }
+// tampilkan popup seperti create battle
+showTxPopup(
+ "Battle Canceled",
+ txHash
+)
 
-  // beri tahu server agar battle hilang dari lobby
-  if(window.socket){
-   socket.emit("cancelBattle",{
-    id:battleId,
-    wallet:walletAddress
-   })
-  }
+  // beri tahu server
+  socket.emit("cancelBattle", {
+   id: battleId,
+   wallet: walletAddress
+  })
 
-  return txHash
+  return true
 
  }catch(err){
 
-  console.error("Cancel failed",err)
-  return null
+  console.error("Cancel failed", err)
+  return false
 
  }
 
 }
 
-export async function joinBattle(battleId,amount){
+export async function joinBattle(battleId, amount){
 
- const msg={
+ if(!client) throw new Error("Wallet not connected")
+
+ const msg = {
   JoinBattle:{
-   battle_id:battleId
+   battle_id: battleId
   }
  }
 
- const fee={
-  amount:[{denom:"uluna",amount:"5000"}],
+ const fee = {
+  amount:[{
+   denom:"uluna",
+   amount:"5000"
+  }],
   gas:"200000"
  }
 
  const funds=[{
   denom:"uluna",
-  amount:String(amount*1000000)
+  amount:String(amount * 1000000)
  }]
 
- const tx=await client.execute(
+ const tx = await client.execute(
   walletAddress,
   CONTRACT_ADDRESS,
   msg,
@@ -178,29 +192,38 @@ export async function joinBattle(battleId,amount){
  )
 
  return tx.transactionHash
+
 }
 
 export async function claimPrize(battleId){
 
- const msg={
+ if(!client){
+  alert("Wallet not connected")
+  return null
+ }
+
+ const msg = {
   ClaimPrize:{
-   battle_id:battleId
+   battle_id: battleId
   }
  }
 
- const fee={
-  amount:[{denom:"uluna",amount:"20000"}],
+ const fee = {
+  amount:[{
+   denom:"uluna",
+   amount:"20000"
+  }],
   gas:"900000"
  }
 
- const tx=await client.execute(
+ const result = await client.execute(
   walletAddress,
   CONTRACT_ADDRESS,
   msg,
   fee
  )
 
- return tx.transactionHash
+ return result.transactionHash
 }
 
 export function getWalletAddress(){
