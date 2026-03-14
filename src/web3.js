@@ -96,6 +96,60 @@ export async function depositBattle(amount){
 return result
 }
 
+export async function cancelBattle(battleId){
+
+ if(!client){
+  alert("Wallet not connected")
+  return null
+ }
+
+ try{
+
+  const msg = {
+   CancelBattle:{
+    battle_id: battleId
+   }
+  }
+
+  const fee={
+   amount:[{denom:"uluna",amount:"8000"}],
+   gas:"400000"
+  }
+
+  const result = await client.execute(
+   walletAddress,
+   CONTRACT_ADDRESS,
+   msg,
+   fee
+  )
+
+  console.log("Cancel success", result)
+
+  const txHash = result.transactionHash || result.hash
+
+  if(typeof showTxPopup !== "undefined"){
+   showTxPopup("Battle Canceled", txHash)
+  }
+
+  // beri tahu server agar battle hilang dari lobby
+  if(window.socket){
+   socket.emit("cancelBattle",{
+    id:battleId,
+    wallet:walletAddress
+   })
+  }
+
+  return txHash
+
+ }catch(err){
+
+  console.error("Cancel failed",err)
+  return null
+
+ }
+
+}
+
 export async function joinBattle(battleId,amount){
 
  const msg={

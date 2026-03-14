@@ -4,6 +4,7 @@ import {
  reconnectWallet,
  joinBattle,
  claimPrize,
+ cancelBattle,
  getWalletAddress
 } from "./web3.js"
 
@@ -13,3 +14,4 @@ window.reconnectWallet = reconnectWallet
 window.joinBattle = joinBattle
 window.claimPrize = claimPrize
 window.getWalletAddress = getWalletAddress
+window.cancelBattle = cancelBattle
