@@ -718,42 +718,47 @@ socket.on("claimPrize",(data)=>{
  // jika hanya 1 player → dia menang
  if(players === 1){
 
-  battle.finished = true;
-  battle.status = "CLOSED";
+ const roomSockets = io.sockets.adapter.rooms.get(room)
 
-  const roomSockets = io.sockets.adapter.rooms.get(room)
+ let winner = null
 
-let winner = null
+ if(roomSockets){
 
-if(roomSockets){
+  const remaining = [...roomSockets]
 
- const remaining = [...roomSockets]
+  if(remaining.length > 0){
 
- if(remaining.length > 0){
+   const winnerSocket = io.sockets.sockets.get(remaining[0])
 
-  const winnerSocket = io.sockets.sockets.get(remaining[0])
+   if(winnerSocket){
+    winner = winnerSocket.wallet
+   }
 
-  if(winnerSocket){
-   winner = winnerSocket.wallet
   }
 
  }
 
-}
+ if(!winner) return
 
-const txHash = await submitWinner(battle.id, winner)
+ const txHash = await submitWinner(battle.id, winner)
 
-io.to(room).emit("battleResult",{
- winner: winner,
- txHash: txHash
-})
+ // tandai selesai setelah submit
+ battle.finished = true
+ battle.status = "CLOSED"
 
-io.to(room + "-peep").emit("battleResult",{
- winner: winner,
- txHash: txHash
-})
+ // kirim result ke pemain
+ io.to(room).emit("battleResult",{
+  winner: winner,
+  txHash: txHash
+ })
 
-await supabase
+ // kirim ke spectator
+ io.to(room + "-peep").emit("battleResult",{
+  winner: winner,
+  txHash: txHash
+ })
+
+ await supabase
  .from("battles")
  .insert({
   creator_wallet: battle.creator,
@@ -763,32 +768,28 @@ await supabase
   pot: battle.pot,
   start_time: new Date(battle.startTime),
   end_time: new Date()
- });
+ })
 
  await supabase.rpc("update_player_stats",{
- creator_wallet: battle.creator,
- challenger_wallet: battle.challenger,
- winner_wallet: winner,
- volume: battle.pot
-});
+  creator_wallet: battle.creator,
+  challenger_wallet: battle.challenger,
+  winner_wallet: winner,
+  volume: battle.pot
+ })
 
-  sendTelegram(
+ sendTelegram(
 `🏆 BENANCE PvP WINNER
 
 👑 Winner: ${winner}
 
 💰 Prize: ${formatLunc(battle.pot)} LUNC
 🎮 Battle ID: ${battle.id}`
-  );
+ )
 
-  io.emit("statsUpdated");
+ io.emit("statsUpdated")
 
-  io.to(room).emit("opponentDead");
-  io.to(room + "-peep").emit("opponentDead");
-
-  return;
-
- }
+ return
+}
 
  // PvP normal
  battle.finished = true;
