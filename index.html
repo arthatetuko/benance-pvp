@@ -1246,7 +1246,10 @@ function renderLeaderboard(id,data,key){
 
  data.slice(0,5).forEach((p,i)=>{
 
-  const short = p.wallet.slice(0,6) + "...";
+  const short =
+ p.wallet.slice(0,6) +
+ "..." +
+ p.wallet.slice(-4)
 
   const div = document.createElement("div");
 
