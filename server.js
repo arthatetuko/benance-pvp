@@ -1,10 +1,16 @@
 require("dotenv").config()
 
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const path=require("path")
+const express = require("express")
+const http = require("http")
+const { Server } = require("socket.io")
+const path = require("path")
 
+const { SigningCosmWasmClient } = require("@cosmjs/cosmwasm-stargate")
+const { DirectSecp256k1HdWallet } = require("@cosmjs/proto-signing")
+const { GasPrice } = require("@cosmjs/stargate")
+const { stringToPath } = require("@cosmjs/crypto")
+
+const RPC = "https://terra-classic-rpc.publicnode.com"
 let serverClient
 let serverAddress
 

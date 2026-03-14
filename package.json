@@ -19,6 +19,11 @@
   "express": "^4.18.2",
   "socket.io": "^4.7.5"
  },
+ 
+"engines": {
+ "node": "20.x"
+},
+
  "devDependencies": {
   "vite": "^5.2.10"
  }
