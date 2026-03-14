@@ -1,17 +1,30 @@
-import {
-  SigningCosmWasmClient
-} from "@cosmjs/cosmwasm-stargate"
-
-import { GasPrice } from "@cosmjs/stargate"
-
 const RPC = "https://terra-classic-rpc.publicnode.com"
 const CHAIN_ID = "columbus-5"
-const CONTRACT_ADDRESS = "terra18yrfs25t0ewk6u4nj6mgkdv4vcnngwkn54xyjyd6607swtmv0jwsswgl9y"
+const CONTRACT_ADDRESS = "terra19aaz3w0lk2uvwc0gksypdtl0znjw96y7wfwx3sya7d4r54rqmqws2wqvw6"
 
 let client = null
 let walletAddress = null
 
+let SigningCosmWasmClient
+let GasPrice
+
+async function loadCosm(){
+
+ if(!SigningCosmWasmClient){
+
+  const cosm = await import("@cosmjs/cosmwasm-stargate")
+  const stargate = await import("@cosmjs/stargate")
+
+  SigningCosmWasmClient = cosm.SigningCosmWasmClient
+  GasPrice = stargate.GasPrice
+
+ }
+
+}
+
 export async function connectWallet(){
+
+  await loadCosm()
 
  if(!window.keplr){
   alert("Install Keplr Wallet")
