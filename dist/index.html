@@ -185,13 +185,15 @@ font-size:14px;
 
 </div>
 
-<h2>Battle Lobby</h2>
+<h2>Benance PvP</h2>
 
 <input type="text" id="battleTime" placeholder="Select battle time" readonly>
 
 <button id="createBattle">Create Battle</button>
 
 <button onclick="openLeaderboard()">Leaderboard</button>
+
+<button onclick="openRules()">Rules</button>
 
 <button onclick="openSkinMenu()">Select Skin</button>
 
@@ -323,6 +325,55 @@ z-index:9999;
 
 <b>⚔ Most Battles</b>
 <div id="topBattles"></div>
+
+</div>
+
+<div id="rulesOverlay" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:9998;
+"></div>
+
+<div id="rulesPopup" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:20px;
+border-radius:12px;
+width:320px;
+max-height:420px;
+overflow-y:auto;
+text-align:left;
+z-index:9999;
+">
+
+<h2 style="text-align:center">Benance PvP Rules</h2>
+
+<ol style="font-size:14px;line-height:1.5">
+
+<li>Benance PvP can only be played using the <b>Keplr Wallet Extension</b> (available on mobile and desktop).</li>
+
+<li>This is a <b>last-survivor game</b> — the player who survives the longest <b>wins the match</b>.</li>
+
+<li>Each battle is strictly <b>1 vs 1</b> between the <b>Creator</b> and the <b>Challenger</b>.</li>
+
+<li>After creating a battle card, the <b>Creator must join the battle room</b>. If the Creator is not present when the battle starts, it will be <b>counted as a loss</b>.</li>
+
+<li>Once a Challenger deposit & joins a battle room, <b>leaving the room will be counted as a loss</b>.</li>
+
+<li>Benance is <b>not responsible for any losses</b>. Please play responsibly and only bet what you can afford to lose.</li>
+
+<li><b>10% of the total pot (2× bet)</b> is allocated to the <b>Benance DAO Treasury</b>.</li>
+
+</ol>
 
 </div>
 
@@ -549,6 +600,24 @@ document.getElementById("leaderboardOverlay").onclick = ()=>{
  closeLeaderboard();
 
 };
+
+function openRules(){
+
+ document.getElementById("rulesOverlay").style.display="block";
+ document.getElementById("rulesPopup").style.display="block";
+
+}
+
+function closeRules(){
+
+ document.getElementById("rulesOverlay").style.display="none";
+ document.getElementById("rulesPopup").style.display="none";
+
+}
+
+document.getElementById("rulesOverlay").onclick = ()=>{
+ closeRules();
+}
 
 
 
