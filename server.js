@@ -802,12 +802,14 @@ if(roomSockets){
 
  const remaining = [...roomSockets]
 
- if(remaining.length > 0){
+ for(const id of remaining){
 
-  const winnerSocket = io.sockets.sockets.get(remaining[0])
+  const s = io.sockets.sockets.get(id)
 
-  if(winnerSocket){
-   winner = winnerSocket.wallet
+  // jangan pilih pemain yang mati
+  if(s && id !== socket.id){
+   winner = s.wallet
+   break
   }
 
  }
