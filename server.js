@@ -65,7 +65,7 @@ async function sendTelegram(message){
 
 
 const LCD = "https://terra-classic-lcd.publicnode.com"
-const CONTRACT_ADDRESS = "terra10fwuv4fdkss7uvnndlz66s8j455qturcqpum8ccurwj5yr88d7ssgvqrhw"
+const CONTRACT_ADDRESS = "terra19smzw4p4lv6lgjngee8glzyqusfq26v2pdn39rhdhy2lvptu70gqnaltc0"
 
 const usedTx = new Set()
 
