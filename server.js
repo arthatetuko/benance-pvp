@@ -246,6 +246,11 @@ function formatLunc(amount){
  });
 }
 
+function shortWallet(wallet){
+ if(!wallet) return ""
+ return wallet.slice(0,6) + "..." + wallet.slice(-4)
+}
+
 function getUTCDate(){
 
  const now = new Date();
@@ -390,15 +395,19 @@ if(!result.valid){
  io.emit("battleList", battles)
 
  sendTelegram(
+
 `🔥 NEW BENANCE PvP BATTLE
 
-Creator: ${battle.creator}
+Creator: ${shortWallet(battle.creator)}
 
 💰 Bet: ${formatLunc(bet)} LUNC
 🎮 Battle ID: ${battle.id}
 📅 ${getUTCDate()}
 
-⚔ Waiting for challenger`
+⚔ Waiting for challenger
+
+🎮 Play: https://benance-pvp-production.up.railway.app/`
+
  );
 
  io.sockets.sockets.forEach(s => {
@@ -610,14 +619,16 @@ socket.to(room + "-peep").emit("opponentSkin",{
  sendTelegram(
 `⚔ BENANCE PvP MATCH ACCEPTED
 
-Creator: ${battle.creator}
-Challenger: ${data.wallet}
+Creator: ${shortWallet(battle.creator)}
+Challenger: ${shortWallet(data.wallet)}
 
 💰 Bet: ${formatLunc(battle.bet)} LUNC
 🎮 Battle ID: ${battle.id}
 📅 ${getUTCDate()}
 
-🚀 Battle starting soon`
+🚀 Battle starting soon
+
+🎮 Play: https://benance-pvp-production.up.railway.app/`
 );
 
 }
@@ -788,11 +799,13 @@ socket.on("claimPrize",(data)=>{
  sendTelegram(
 `🏆 BENANCE PvP WINNER
 
-👑 Winner: ${winner}
+👑 Winner: ${shortWallet(winner)}
 
 💰 Prize: ${formatLunc(battle.pot)} LUNC
-🎮 Battle ID: ${battle.id}`
- )
+🎮 Battle ID: ${battle.id}
+
+🎮 Play: https://benance-pvp-production.up.railway.app/`
+)
 
  io.emit("statsUpdated")
 
