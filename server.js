@@ -706,8 +706,6 @@ socket.on("claimPrize",(data)=>{
 
  socket.on("playerDead", async (room)=>{
 
-socket.leave(room)
-
  const battle = battles.find(b => b.room === room);
 
  if(!battle) return;
