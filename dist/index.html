@@ -1137,6 +1137,14 @@ socket.on("joinDenied",(msg)=>{
  alert(msg);
 });
 
+socket.on("battleRejected",()=>{
+
+ alert("Battle rejected. No challenger joined.")
+
+ backToMenu()
+
+})
+
 socket.on("opponentPosition",(data)=>{
  opponentPositions[data.id] = data.y;
 });

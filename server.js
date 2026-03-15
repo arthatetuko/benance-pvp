@@ -279,9 +279,17 @@ function updatePlayers(){
    return true;
   }
 
-  if(now >= b.startTime && players === 0){
-   b.status = "REJECTED";
-  }
+  if(now >= b.startTime && !b.challenger){
+
+ b.status = "REJECTED"
+ b.finished = true
+
+ const room = "battle-"+b.id
+
+ io.to(room).emit("battleRejected")
+ io.to(room+"-peep").emit("battleRejected")
+
+}
 
   return true;
 
