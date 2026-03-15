@@ -276,13 +276,17 @@ function updatePlayers(){
   // jika battle sudah selesai
   if(b.finished){
 
-   // hapus jika lebih dari 1 menit
-   if(now - b.startTime > 60000){
-    return false;
-   }
+ // jika REJECTED jangan dihapus
+ if(b.status === "REJECTED"){
+  return true;
+ }
 
-   return true;
-  }
+ if(now - b.startTime > 60000){
+  return false;
+ }
+
+ return true;
+}
 
   if(now >= b.startTime && !b.challenger){
 
