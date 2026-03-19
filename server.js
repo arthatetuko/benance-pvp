@@ -936,7 +936,8 @@ if(socket.rooms.has(peepRoom)){
 const PORT = process.env.PORT || 3000;
 
 /* SERVE DIST BUILD */
-app.use(express.static(path.join(__dirname,"dist")))
+app.use(express.static("public"));
+app.use(express.static("dist"));
 
 app.get("/stats", async (req,res)=>{
 
