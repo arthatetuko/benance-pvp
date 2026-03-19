@@ -478,6 +478,7 @@ const bgImage = new Image();
 bgImage.src = "skins/background.png";
 
 let bgX = 0;
+let lastFrameTime = 0;
 
 
 // pipe images
@@ -519,6 +520,7 @@ let playerSkin = localStorage.getItem("skin") || "changpeng";
 let birdFrame = 0;
 let flapTimer = 0;
 let lastSendTime = 0;
+
 
 let birdFrames = [
  new Image(),
