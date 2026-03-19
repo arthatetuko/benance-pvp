@@ -479,6 +479,7 @@ bgImage.src = "skins/background.png";
 
 let bgX = 0;
 let lastFrameTime = 0;
+let lastTime = 0;
 
 
 // pipe images
@@ -529,6 +530,7 @@ let birdFrames = [
 
 let opponents = {};
 let opponentPositions = {};
+let opponentRenderY = {};
 // ===== SOUND EFFECT =====
 
 const tapSound = new Audio("sounds/tap.mp3");
@@ -1164,7 +1166,13 @@ socket.on("battleRejected",()=>{
 })
 
 socket.on("opponentPosition",(data)=>{
+
+ if(!opponentRenderY[data.id]){
+  opponentRenderY[data.id] = data.y;
+ }
+
  opponentPositions[data.id] = data.y;
+
 });
 
 socket.on("youLose",()=>{
@@ -1395,6 +1403,9 @@ if(timestamp - lastFrameTime < 33){
  return;
 }
 
+const delta = (timestamp - lastTime) / 16.67;
+lastTime = timestamp;
+
 lastFrameTime = timestamp;
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -1429,13 +1440,13 @@ ctx.drawImage(bgImage, bgX + bgImage.width, 0);
  if(!isSpectator){
 
  if(isDying){
-  velocity += 0.6;
-  birdY += velocity;
- }
- else if(gameActive){
-  velocity += 0.4;
-  birdY += velocity;
- }
+ velocity += 0.6 * delta;
+ birdY += velocity * delta;
+}
+else if(gameActive){
+ velocity += 0.4 * delta;
+ birdY += velocity * delta;
+}
 
 }
 
@@ -1461,7 +1472,11 @@ if(!isSpectator){
  const now = Date.now();
 
  if(now - lastSendTime > 100){ // 10x per detik
-  socket.emit("playerPosition",{y:birdY,room:room});
+  socket.emit("playerPosition",{
+ y: birdY,
+ room: room,
+ t: Date.now()
+});
   lastSendTime = now;
  }
 
@@ -1487,7 +1502,11 @@ ctx.globalAlpha = 1;
 
  Object.entries(opponents).forEach(([id,img])=>{
 
- const y = opponentPositions[id] !== undefined ? opponentPositions[id] : startOpponentY;
+ if(opponentPositions[id] !== undefined){
+ opponentRenderY[id] += (opponentPositions[id] - opponentRenderY[id]) * 0.2;
+}
+
+const y = opponentRenderY[id] || startOpponentY;
 
  if(img.complete && img.naturalWidth !== 0){
 

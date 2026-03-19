@@ -482,6 +482,7 @@ socket.on("playerPosition",(data)=>{
  socket.to(data.room).emit("opponentPosition",{
  id: socket.id,
  y: data.y
+ t: data.t
 });
 
  // kirim juga ke spectator
