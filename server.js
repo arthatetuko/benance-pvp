@@ -481,14 +481,15 @@ socket.on("playerPosition",(data)=>{
 
  socket.to(data.room).emit("opponentPosition",{
  id: socket.id,
- y: data.y
+ y: data.y,
  t: data.t
 });
 
  // kirim juga ke spectator
  socket.to(data.room + "-peep").emit("opponentPosition",{
  id: socket.id,
- y: data.y
+ y: data.y,
+ t: data.t
 });
 
 });
