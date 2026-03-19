@@ -514,6 +514,7 @@ const startOpponentY = 220;
 let birdY = startPlayerY;
 let velocity=0;
 let pipes=[];
+let pipes=[];
 let passedPipes = new Set();
 let playerSkin = localStorage.getItem("skin") || "changpeng";
 
@@ -1283,7 +1284,7 @@ function seededRandom(){
 
 function createPipe(){
 
- const gap = 220;
+ const gap = 240;
 
  const minY = 50;
  const maxY = canvas.height - gap - 50;
@@ -1297,14 +1298,6 @@ function createPipe(){
  });
 
 }
-
-setInterval(()=>{
-
- if(gameActive && Date.now() > startTime + 2000){
-  createPipe();
- }
-
-},2000);
 
 document.addEventListener("click",()=>{
 
@@ -1517,6 +1510,25 @@ const y = opponentRenderY[id] || startOpponentY;
  }
 
 });
+
+if(gameActive){
+
+ if(pipes.length === 0){
+
+  createPipe();
+
+ }
+ else{
+
+  const lastPipe = pipes[pipes.length - 1];
+
+  if(lastPipe.x < canvas.width - PIPE_SPACING){
+   createPipe();
+  }
+
+ }
+
+}
 
  pipes.forEach(pipe=>{
 
