@@ -518,6 +518,7 @@ let playerSkin = localStorage.getItem("skin") || "changpeng";
 
 let birdFrame = 0;
 let flapTimer = 0;
+let lastSendTime = 0;
 
 let birdFrames = [
  new Image(),
@@ -1315,7 +1316,7 @@ document.addEventListener("touchstart",()=>{
  tapSound.currentTime = 0;
  tapSound.play();
 
-});
+},{passive:true});
 
 async function loadStats(){
 
@@ -1385,7 +1386,14 @@ loadStats();
 loadLeaderboard();
 
 
-function gameLoop(){
+function gameLoop(timestamp){
+
+if(timestamp - lastFrameTime < 33){
+ requestAnimationFrame(gameLoop);
+ return;
+}
+
+lastFrameTime = timestamp;
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -1447,7 +1455,14 @@ if(!isSpectator){
 
  if(!isSpectator){
  if(gameActive){
- socket.emit("playerPosition",{y:birdY,room:room});
+
+ const now = Date.now();
+
+ if(now - lastSendTime > 100){ // 10x per detik
+  socket.emit("playerPosition",{y:birdY,room:room});
+  lastSendTime = now;
+ }
+
 }
 }
 
@@ -1495,23 +1510,14 @@ ctx.globalAlpha = 1;
 
  }
 
- // TOP PIPE
-let bodyHeight = pipe.y - 30;
-
-for(let y=0; y<bodyHeight; y+=32){
- ctx.drawImage(pipeBody, pipe.x, y, 40, 32);
-}
-
+// TOP PIPE (OPTIMIZED)
+ctx.drawImage(pipeBody, pipe.x, 0, 40, pipe.y);
 ctx.drawImage(pipeHead, pipe.x-5, pipe.y-30, 50, 30);
 
-
-// BOTTOM PIPE
+// BOTTOM PIPE (OPTIMIZED)
 let bottomStart = pipe.y + pipe.gap;
 
-for(let y=bottomStart+30; y<canvas.height; y+=32){
- ctx.drawImage(pipeBody, pipe.x, y, 40, 32);
-}
-
+ctx.drawImage(pipeBody, pipe.x, bottomStart, 40, canvas.height - bottomStart);
 ctx.drawImage(pipeHead, pipe.x-5, bottomStart, 50, 30);
 
  if(!isSpectator){
