@@ -1142,13 +1142,33 @@ async function joinBattleLobby(id){
    return;
   }
 
-  const txHash = await window.joinBattle(battle.id, battle.bet)
+const buttons = document.querySelectorAll(".battleCard button");
+buttons.forEach(b => b.disabled = true);
 
-if(!txHash) return
+  // 🔥 PROCESSING ON
+showProcessing();
+
+let txHash;
+
+try{
+ txHash = await window.joinBattle(battle.id, battle.bet)
+}catch(e){
+ console.log("JOIN ERROR:", e)
+}
+
+// 🔥 PROCESSING OFF
+hideProcessing();
+
+buttons.forEach(b => b.disabled = false);
+
+if(!txHash){
+ alert("Transaction failed");
+ return;
+}
 
 showTxPopup(
-"Join Battle Success",
-txHash
+ "Join Battle Success",
+ txHash
 )
 
 room = "battle-" + id;
