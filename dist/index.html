@@ -1099,14 +1099,33 @@ async function cancelBattle(id){
   return;
  }
 
- // panggil smart contract dulu
- const success = await cancelBattleContract(id);
+ const buttons = document.querySelectorAll(".battleCard button");
+ buttons.forEach(b => b.disabled = true);
 
- if(!success){
+ showProcessing();
+
+ let txHash;
+
+ try{
+  txHash = await cancelBattleContract(id);
+ }catch(e){
+  console.log("REFUND ERROR:", e);
+ }
+
+ hideProcessing();
+
+ buttons.forEach(b => b.disabled = false);
+
+ if(!txHash){
+  alert("Refund failed");
   return;
  }
 
- // jika tx sukses baru inform server
+ showTxPopup(
+  "Refund Success",
+  txHash
+ )
+
  socket.emit("cancelBattle", id);
 
 }
