@@ -447,6 +447,26 @@ margin-bottom:15px;
 
 </div>
 
+<div id="processingPopup" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:#111;
+padding:25px;
+border-radius:12px;
+width:260px;
+text-align:center;
+z-index:10001;
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+">
+
+<h3>Processing...</h3>
+<p style="font-size:13px;">Waiting for wallet confirmation</p>
+
+</div>
+
 <div id="battleWarning" style="
 display:none;
 position:absolute;
@@ -646,7 +666,13 @@ document.getElementById("rulesOverlay").onclick = ()=>{
  closeRules();
 }
 
+function showProcessing(){
+ document.getElementById("processingPopup").style.display = "block";
+}
 
+function hideProcessing(){
+ document.getElementById("processingPopup").style.display = "none";
+}
 
 function renderSkinList(){
 
@@ -967,38 +993,50 @@ async function createNext(){
 
  }
 
- if(createStep === 3){
+if(createStep === 3){
 
  if(!window.getWalletAddress()){
- alert("Connect wallet first")
- return
-}
+  alert("Connect wallet first")
+  return
+ }
 
-const tx = await window.depositBattle(createBet)
+ document.querySelector("#createPopup button:last-child").disabled = true;
+ // 🔥 TAMPILKAN PROCESSING
+ showProcessing();
 
-console.log("TX RESULT:", tx)
+ let tx;
 
-if(!tx){
- console.log("TX FAILED")
- return
-}
+ try{
+  tx = await window.depositBattle(createBet)
+ }catch(e){
+  console.log("DEPOSIT ERROR:", e)
+ }
 
-const txHash = tx.transactionHash
-console.log("TX HASH:", txHash)
+ // 🔥 HILANGKAN PROCESSING
+ hideProcessing();
 
-socket.emit("createBattle",{
- bet:Number(createBet),
- startTime:Number(createBattleTime),
- creator: window.getWalletAddress(),
- txHash:txHash
-})
+document.querySelector("#createPopup button:last-child").disabled = false;
 
-showTxPopup(
- "Create Battle Success",
- txHash
-)
+ if(!tx){
+  alert("Transaction failed");
+  return;
+ }
 
-closeCreateBattle()
+ const txHash = tx.transactionHash
+
+ socket.emit("createBattle",{
+  bet:Number(createBet),
+  startTime:Number(createBattleTime),
+  creator: window.getWalletAddress(),
+  txHash:txHash
+ })
+
+ showTxPopup(
+  "Create Battle Success",
+  txHash
+ )
+
+ closeCreateBattle()
 
 }
 
