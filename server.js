@@ -787,16 +787,17 @@ if(!winner && battle.creator){
  })
 
  await supabase
- .from("battles")
- .insert({
-  creator_wallet: battle.creator,
-  challenger_wallet: battle.challenger,
-  winner_wallet: winner,
-  bet: battle.bet,
-  pot: battle.pot,
-  start_time: new Date(battle.startTime),
-  end_time: new Date()
- })
+.from("battles")
+.upsert({
+ battle_id: battle.id, // 🔥 WAJIB
+ creator_wallet: battle.creator,
+ challenger_wallet: battle.challenger,
+ winner_wallet: winner,
+ bet: battle.bet,
+ pot: battle.pot,
+ start_time: new Date(battle.startTime),
+ end_time: new Date()
+})
 
  await supabase.rpc("update_player_stats",{
   creator_wallet: battle.creator,
