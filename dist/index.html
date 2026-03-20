@@ -1312,11 +1312,26 @@ socket.on("statsUpdated", ()=>{
 
 async function getPrize(){
 
- console.log("CLAIM BUTTON CLICKED")
-
  const battleId = Number(room.replace("battle-",""))
 
- const txHash = await window.claimPrize(battleId)
+ const btn = document.querySelector("#winPopup button");
+ btn.disabled = true;
+
+ // 🔥 SHOW PROCESSING
+ showProcessing();
+
+ let txHash;
+
+ try{
+  txHash = await window.claimPrize(battleId)
+ }catch(e){
+  console.log("CLAIM ERROR:", e)
+ }
+
+ // 🔥 HIDE PROCESSING
+ hideProcessing();
+
+ btn.disabled = false;
 
  if(!txHash){
   alert("Claim failed")
@@ -1333,7 +1348,6 @@ async function getPrize(){
 
  // kembali ke lobby
  backToMenu()
-
 }
 
 socket.on("cancelDenied",(msg)=>{
