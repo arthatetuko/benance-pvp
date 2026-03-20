@@ -520,6 +520,8 @@ let velocity=0;
 let pipes=[];
 const PIPE_SPACING = 220;
 let passedPipes = new Set();
+let pipeCount = 0;       // jumlah pipe yang dilewati
+let currentGap = 240;    // gap dinamis
 let playerSkin = localStorage.getItem("skin") || "changpeng";
 
 
@@ -1289,7 +1291,7 @@ function seededRandom(){
 
 function createPipe(){
 
- const gap = 240;
+ const gap = currentGap;
 
  const minY = 50;
  const maxY = canvas.height - gap - 50;
@@ -1297,10 +1299,12 @@ function createPipe(){
  const y = minY + seededRandom() * (maxY - minY);
 
  pipes.push({
-  x:canvas.width + 50,
-  y:y,
-  gap:gap
- });
+ x:canvas.width + 50,
+ y:y,
+ gap:gap,
+ baseY: y,
+ offset: Math.random() * Math.PI * 2 // untuk animasi naik turun
+});
 
 }
 
@@ -1551,14 +1555,26 @@ if(gameActive){
 
  pipe.x -= 2;
 
+ // 🔥 STEP 4 - PIPE MOVE
+if(pipeCount >= 10){
+ pipe.offset += 0.05;
+ pipe.y = pipe.baseY + Math.sin(pipe.offset) * 30;
+}
+
  if(!passedPipes.has(pipe) && pipe.x + 40 < 50){
 
-  passedPipes.add(pipe);
+ passedPipes.add(pipe);
 
-  pointSound.currentTime = 0;
-  pointSound.play();
+ pipeCount++; // 🔥 TAMBAH INI
 
+ // 🔥 SETIAP 5 PIPE → GAP MENGECIL
+ if(pipeCount % 5 === 0){
+  currentGap *= 0.95; // kecil 5%
  }
+
+ pointSound.currentTime = 0;
+ pointSound.play();
+}
 
 // TOP PIPE (OPTIMIZED)
 ctx.drawImage(pipeBody, pipe.x, 0, 40, pipe.y);
@@ -1645,6 +1661,9 @@ function backToMenu(){
 
  gameActive = false;
  room = null;
+
+ pipeCount = 0;
+ currentGap = 240;
 
  pipes = [];
  passedPipes.clear();
