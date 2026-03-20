@@ -878,7 +878,8 @@ io.to(room + "-peep").emit("battleResult",{
 
 await supabase
 .from("battles")
-.insert({
+.upsert({
+ battle_id: battle.id, // 🔥 WAJIB
  creator_wallet: battle.creator,
  challenger_wallet: battle.challenger,
  winner_wallet: winner,
