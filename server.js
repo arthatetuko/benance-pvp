@@ -747,23 +747,26 @@ socket.on("claimPrize",(data)=>{
 
  let winner = null
 
- if(roomSockets){
+if(roomSockets){
 
-  const remaining = [...roomSockets]
+ const remaining = [...roomSockets]
 
-  if(remaining.length > 0){
+ if(remaining.length > 0){
 
-   const winnerSocket = io.sockets.sockets.get(remaining[0])
+  const winnerSocket = io.sockets.sockets.get(remaining[0])
 
-   if(winnerSocket){
-    winner = winnerSocket.wallet
-   }
-
+  if(winnerSocket){
+   winner = winnerSocket.wallet
   }
 
  }
 
- if(!winner) return
+}
+
+// 🔥 FALLBACK (WAJIB)
+if(!winner && battle.creator){
+ winner = battle.creator
+}
 
  const txHash = await submitWinner(battle.id, winner)
 
@@ -833,7 +836,6 @@ if(roomSockets){
 
   const s = io.sockets.sockets.get(id)
 
-  // jangan pilih pemain yang mati
   if(s && id !== socket.id){
    winner = s.wallet
    break
@@ -841,6 +843,22 @@ if(roomSockets){
 
  }
 
+ // 🔥 FALLBACK (WAJIB)
+ if(!winner && remaining.length > 0){
+
+  const fallbackSocket = io.sockets.sockets.get(remaining[0])
+
+  if(fallbackSocket){
+   winner = fallbackSocket.wallet
+  }
+
+ }
+
+}
+
+// 🔥 FINAL SAFETY (PALING PENTING)
+if(!winner){
+ winner = battle.creator
 }
 
 // 🔥 TAMBAHKAN INI
