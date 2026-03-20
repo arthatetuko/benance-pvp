@@ -127,7 +127,11 @@ canvas{
  left:50%;
  transform:translate(-50%,-50%);
  display:block;
- z-index:1;
+ z-index:20; /* 🔥 naikkan layer */
+
+ touch-action: none; /* 🔥 WAJIB */
+ -webkit-user-select: none;
+ user-select: none;
 }
 
 </style>
@@ -1132,6 +1136,7 @@ socket.emit("joinBattle",{
  }
 
  document.getElementById("menu").style.display="none";
+  document.getElementById("menu").style.pointerEvents = "none";
  document.getElementById("battleWarning").style.display="block";
 
 }
@@ -1318,8 +1323,10 @@ function flap(){
 }
 
 // MOBILE (WAJIB)
-document.addEventListener("touchstart",(e)=>{
- e.preventDefault(); // penting!
+canvas.addEventListener("touchstart",(e)=>{
+ console.log("TOUCH DETECTED"); // 🔥 DEBUG
+
+ e.preventDefault();
  flap();
 }, { passive:false });
 
@@ -1660,6 +1667,7 @@ function backToMenu(){
  document.getElementById("winPopup").style.display="none";
  document.getElementById("spectatorGameOver").style.display="none";
  document.getElementById("battleCanceledPopup").style.display="none";
+ document.getElementById("menu").style.pointerEvents = "auto";
 
  document.getElementById("menu").style.display = "block";
  document.getElementById("battleWarning").style.display="none";
