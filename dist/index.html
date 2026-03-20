@@ -1299,28 +1299,32 @@ function createPipe(){
 
 }
 
-document.addEventListener("click",()=>{
+// ===== INPUT SYSTEM BARU =====
+
+let tapBuffer = false;
+
+function flap(){
 
  if(!gameActive) return;
 
- velocity=-6;
+ tapBuffer = true;
 
- tapSound.currentTime = 0;
- tapSound.play();
+ // sound (lebih ringan)
+ if(tapSound.paused){
+  tapSound.currentTime = 0;
+  tapSound.play();
+ }
 
-});
+}
 
-document.addEventListener("touchstart",()=>{
+// MOBILE (WAJIB)
+document.addEventListener("touchstart",(e)=>{
+ e.preventDefault(); // penting!
+ flap();
+}, { passive:false });
 
- if(!gameActive) return;
-
- velocity=-6;
-
- tapSound.currentTime = 0;
- tapSound.play();
-
-},{passive:true});
-
+// DESKTOP
+document.addEventListener("mousedown",flap);
 async function loadStats(){
 
  try{
@@ -1391,7 +1395,7 @@ loadLeaderboard();
 
 function gameLoop(timestamp){
 
-if(timestamp - lastFrameTime < 33){
+if(timestamp - lastFrameTime < 16){
  requestAnimationFrame(gameLoop);
  return;
 }
@@ -1432,14 +1436,20 @@ ctx.drawImage(bgImage, bgX + bgImage.width, 0);
 
  if(!isSpectator){
 
+ // 🔥 APPLY TAP BUFFER
+ if(tapBuffer){
+  velocity = -6;
+  tapBuffer = false;
+ }
+
  if(isDying){
- velocity += 0.6 * delta;
- birdY += velocity * delta;
-}
-else if(gameActive){
- velocity += 0.4 * delta;
- birdY += velocity * delta;
-}
+  velocity += 0.6;
+  birdY += velocity;
+ }
+ else if(gameActive){
+  velocity += 0.4;
+  birdY += velocity;
+ }
 
 }
 
